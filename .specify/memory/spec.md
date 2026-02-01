@@ -46,14 +46,17 @@ As a player, I want to receive immediate feedback when I make a mistake (acciden
 
 **Why this priority**: This is the "fail state" of the game and essential for game design. Without consequences, traffic light control has no meaning.
 
-**Independent Test**: Can be tested by intentionally causing two vehicles to collide at an intersection and checking whether the intersection is blocked and visually marked.
+**Independent Test**: Can be tested by intentionally causing vehicles to collide at an intersection and checking whether the intersection is blocked with additively increasing block time as more vehicles collide (maximum 4 vehicles), and whether it is visually marked. Additional vehicles should form queues before the intersection.
 
 **Acceptance Scenarios**:
 
-1. **Given** two vehicles approaching the same intersection from different directions, **When** both enter the intersection simultaneously with a green light, **Then** a collision is detected
-2. **Given** a detected collision, **When** the accident occurs, **Then** the intersection is blocked for 5-10 seconds
-3. **Given** a blocked intersection, **When** the blocking time is running, **Then** all lights are displayed as red and new vehicles cannot pass
-4. **Given** a blocked intersection, **When** the blocking time expires, **Then** the intersection is released and usable again
+1. **Given** two vehicles approaching the same intersection from different directions, **When** both enter the intersection simultaneously with green lights in their respective directions, **Then** a collision is detected
+2. **Given** a detected collision with 2 vehicles, **When** the accident occurs, **Then** the intersection is blocked for 20 seconds
+3. **Given** an already blocked intersection with 2 collided vehicles, **When** a third vehicle collides at the same intersection, **Then** the blocking time is reset to 50 seconds (20 + 30) and starts counting from this new value
+4. **Given** an already blocked intersection with 3 collided vehicles (blocking time 50s), **When** a fourth vehicle collides, **Then** the blocking time is reset to 100 seconds (20 + 30 + 50) and the collision counter is capped at 4
+5. **Given** an intersection with 4 collided vehicles (maximum), **When** additional vehicles approach the blocked intersection, **Then** they wait in queue before the intersection and do not enter or add to the collision
+6. **Given** a blocked intersection, **When** the blocking time is running, **Then** all lights are displayed as red and new vehicles cannot pass
+7. **Given** a blocked intersection, **When** the blocking time expires, **Then** the intersection is released and usable again with collision counter reset to 0
 
 ---
 
@@ -99,26 +102,51 @@ As a player, I want to see a visually impressive, clear, and organized 2D top-do
 ### Edge Cases
 
 - **What happens when a vehicle waits at a red light and the light is never switched to green?** → Vehicle waits indefinitely (player responsibility)
-- **How does the system behave when multiple lights are switched simultaneously?** → Each light is switched independently, no synchronization required
+- **How does the system behave when multiple lights are clicked/switched simultaneously?** → Click events are queued and processed sequentially to prevent race conditions and ensure consistent state transitions
+- **What happens when all 4 lights show green and vehicles from multiple directions enter?** → Collision detection activates; accidents can occur (intentional game design to increase difficulty)
+- **What happens when all 4 lights show red simultaneously?** → All approaching vehicles stop; no movement until at least one light is switched to green
 - **What happens when a new vehicle reaches an intersection during a blocking period?** → Vehicle waits in front of the intersection until the block is lifted
+- **What happens when multiple collisions occur at the same intersection during an active blocking period?** → Each additional colliding vehicle exponentially increases the blocking time: 2 vehicles = x (base time), 3 vehicles = x², 4 vehicles = x³. **Maximum 4 vehicles can collide** - the timer is capped at x³. Additional vehicles wait in queue before the intersection and do not add to the collision count.
+- **How do vehicles behave when another vehicle is directly ahead on the same road segment?** → Vehicles automatically slow down and follow at a safe distance. **No collisions occur outside of intersections** - only at intersections when traffic lights are incorrectly managed.
+- **What happens when a long queue forms due to a red light or blocked intersection?** → Vehicles stack up in a queue/traffic jam, maintaining safe distances. This creates strategic pressure on the player to manage traffic flow efficiently.
+- **How does a vehicle determine which traffic light to check?** → Each vehicle checks only its specific directional traffic light based on its approach direction (e.g., a vehicle approaching from the North checks the North light)
 - **Can a vehicle drive "backwards" or change its route?** → No, route is fixed at spawn and immutable
 - **What happens when no free route to the destination exists?** → Should be avoided in grid design; alternative: vehicle is not spawned
 - **How are crossing routes prioritized in Dijkstra?** → All edges have equal weight (1 unit), no prioritization
+- **Can dangerous light combinations (e.g., N+S+E green, W red) be created?** → Yes, all combinations are allowed; player must manage risk
+
+## Clarifications
+
+### Session 2026-02-01
+
+- Q: How many independent traffic lights should exist at each intersection? → A: C (4 fully independent lights - North, South, East, West can each be Red or Green independently)
+- Q: When a vehicle approaches an intersection with 4 independent lights, which light(s) determine if it can proceed? → A: B (Vehicle checks its specific directional light)
+- Q: If multiple vehicles collide at same intersection during blocking period, how is blocking time calculated? → A: CUSTOM - Blocking time increases additively with each colliding vehicle: 2 vehicles = 20 seconds, 3 vehicles = 50 seconds (20+30), 4 vehicles = 100 seconds (20+30+50). Timer resets to new value when additional collision occurs. **MAXIMUM 4 vehicles can collide at an intersection** - additional vehicles wait in queue before the intersection.
+- Q: What is the target frame rate for visual smoothness and animation quality? → A: B (30 FPS minimum requirement, 60 FPS desirable if achievable without significant extra effort)
+- Q: When multiple traffic lights are clicked/switched simultaneously, how should the system process them? → A: B (Clicks are queued and processed sequentially)
+- Q: How do vehicles behave outside of intersections when another vehicle is ahead? → A: CUSTOM - Vehicles NEVER collide outside of intersections. They form queues/traffic jams by following the vehicle ahead at a safe distance.
+- Q: What is the game over condition? → A: CUSTOM - The game ends when no new vehicles can be spawned because all city border entry points are blocked by traffic jams (gridlock condition). A grace period of 5 seconds is provided before triggering Game Over.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
 - **FR-001**: System MUST create a grid-based city with rectangular intersections
-- **FR-002**: System MUST provide a traffic light system with two states (Red/Green) at each intersection
-- **FR-003**: System MUST enable separate traffic light control for horizontal and vertical directions
-- **FR-004**: Player MUST be able to manually switch traffic lights via mouse click (Desktop/Web) or touch (Mobile)
+- **FR-002**: System MUST provide 4 fully independent traffic lights (North, South, East, West) at each intersection, each with two states (Red/Green)
+- **FR-003**: System MUST enable independent control of all 4 directional traffic lights at each intersection, with no automatic synchronization between lights
+- **FR-004**: Player MUST be able to manually switch each of the 4 directional traffic lights via mouse click (Desktop/Web) or touch (Mobile)
+- **FR-004a**: System MUST queue player input events (traffic light switches) and process them sequentially to prevent race conditions and ensure consistent state transitions
 - **FR-005**: System MUST spawn vehicles at city borders
 - **FR-006**: System MUST calculate a route for each vehicle at spawn using Dijkstra's algorithm
-- **FR-007**: Vehicles MUST stop at red lights
+- **FR-007**: Vehicles MUST check their specific directional traffic light (based on approach direction) and stop at red lights
 - **FR-008**: Vehicles MUST continue/start moving at green lights
-- **FR-009**: System MUST detect collisions between two vehicles at intersections
-- **FR-010**: System MUST block the affected intersection for 5-10 seconds (configurable) upon collision
+- **FR-008a**: Vehicles MUST form queues when waiting at red lights or blocked intersections, maintaining safe distances between each other
+- **FR-008b**: Vehicles MUST follow other vehicles on the same road segment at a safe distance and automatically adjust speed to prevent collisions outside of intersections
+- **FR-009**: System MUST detect collisions between vehicles at intersections
+- **FR-009a**: System MUST track the number of vehicles that collide at each blocked intersection (maximum 4 vehicles) and calculate blocking time additively: 2 vehicles = 20s, 3 vehicles = 50s (20+30), 4 vehicles = 100s (20+30+50)
+- **FR-009b**: System MUST reset the blocking timer to the new additive value when an additional vehicle collides at an already blocked intersection (up to the 4-vehicle maximum)
+- **FR-009c**: System MUST prevent collisions outside of intersections by implementing vehicle following behavior with safe distance maintenance
+- **FR-010**: System MUST block the affected intersection with additively increasing duration based on collision count: 2 vehicles = 20 seconds, 3 vehicles = 50 seconds, 4 vehicles = 100 seconds. Maximum blocking time is 100 seconds (4 vehicles cap).
 - **FR-011**: System MUST visually mark blocked intersections
 - **FR-012**: System MUST award +1 point when a vehicle passes an intersection without accident
 - **FR-013**: System MUST double the accumulated points of a vehicle when it reaches its destination
@@ -137,13 +165,14 @@ As a player, I want to see a visually impressive, clear, and organized 2D top-do
 ### Key Entities
 
 - **City**: Represents the entire road network, manages all intersections and the graph network for routing
-- **Intersection**: A single intersection with grid position, traffic light system, status (normal/blocked), blocking timer
-- **TrafficLight**: Traffic light control with state (Red/Green), direction (horizontal/vertical), switching method
-- **Vehicle**: Vehicle with current position, route (list of Intersections), movement speed, point counter for passed intersections
+- **Intersection**: A single intersection with grid position, 4 independent traffic lights (N/S/E/W), status (normal/blocked), blocking timer, collision vehicle counter (capped at 4) for additive blocking calculation, input event queue for sequential processing
+- **TrafficLight**: Fully independent directional traffic light control with state (Red/Green), direction (North/South/East/West), switching method. Each light operates independently with no automatic synchronization
+- **Vehicle**: Vehicle with current position, route (list of Intersections), movement speed, point counter for passed intersections, approach direction for determining which directional light to check, following behavior (maintains safe distance from vehicle ahead), queue position when waiting
 - **Route**: Path description as list of Intersections from start to destination, current index in the route
 - **CityGraph**: Graph representation of the city with adjacency list, Dijkstra implementation, edge weights
 - **VehicleSpawner**: Manages spawn logic, selects start points and destinations, creates vehicles with calculated route
-- **CollisionManager**: Detects collisions, triggers intersection blocking, manages blocking timers
+- **CollisionManager**: Detects collisions at intersections only, triggers intersection blocking, manages blocking timers with additive duration calculation. Tracks collision vehicle count per intersection (max 4) and calculates blocking time as: 2 vehicles = 20s, 3 vehicles = 50s, 4 vehicles = 100s. Resets counter when blocking expires.
+- **TrafficManager**: NEW - Manages vehicle queues and following behavior. Ensures vehicles maintain safe distances on road segments. Prevents collisions outside of intersections. Coordinates queue formation at red lights and blocked intersections.
 - **ScoreManager**: Manages total score, processes scoring events (intersection passed, destination reached)
 - **VisualEffectsManager**: Manages particle effects, animations, and visual feedback for game events (collisions, celebrations, transitions)
 - **AnimationController**: Controls and coordinates smooth transitions and interpolations for all animated elements
@@ -163,6 +192,8 @@ As a player, I want to see a visually impressive, clear, and organized 2D top-do
 - **SC-009**: Visual effects and animations enhance game feel and receive positive feedback from test players (80%+ approval rating)
 - **SC-010**: All animations run at consistent 60 FPS without stuttering or frame drops on target platforms
 - **SC-011**: Color scheme is visually cohesive and pleasing, with good contrast for accessibility
+- **SC-012**: Game Over condition is triggered reliably when all entry points are blocked for the grace period
+- **SC-013**: Player understands why the game ended (gridlock is clearly communicated visually and textually)
 
 ## Technical Context
 
@@ -191,6 +222,7 @@ As a player, I want to see a visually impressive, clear, and organized 2D top-do
 
 ### Architecture Considerations
 - **Game Loop**: Standard game loop (Input → Update → Render) with Compose integration
+- **Input Handling**: Sequential event queue processing for traffic light switches to prevent race conditions and ensure deterministic state transitions
 - **Event System**: Kotlin Flow/StateFlow for reactive events (collisions, scoring, intersection passage)
 - **State Management**: 
   - MVI (Model-View-Intent) Pattern with Compose
@@ -203,7 +235,7 @@ As a player, I want to see a visually impressive, clear, and organized 2D top-do
 ### Performance Requirements
 - Grid Size: Initial 10x10 to 20x20 intersections
 - Simultaneous Vehicles: 10-50
-- Frame Rate: 30+ FPS (60 FPS desirable for Desktop/Mobile)
+- Frame Rate: 30 FPS minimum requirement (60 FPS desirable if achievable without significant extra development effort)
 - Dijkstra Calculation: < 100ms per route
 - Web Performance: Functional on modern browsers (Chrome, Firefox, Safari)
 - Mobile Performance: Optimized for mid-range Android devices
@@ -215,3 +247,17 @@ As a player, I want to see a visually impressive, clear, and organized 2D top-do
 - **Coroutines**: kotlinx.coroutines for asynchronous operations
 - **Serialization**: kotlinx.serialization for configuration/saves
 - **DI**: Koin or manual DI (KISS principle)
+
+---
+
+## Clarifications *(optional)*
+
+### Session 2026-02-01
+
+- Q: How many independent traffic lights should exist at each intersection? → A: C (4 fully independent lights - North, South, East, West can each be Red or Green independently)
+- Q: When a vehicle approaches an intersection with 4 independent lights, which light(s) determine if it can proceed? → A: B (Vehicle checks its specific directional light)
+- Q: If multiple vehicles collide at same intersection during blocking period, how is blocking time calculated? → A: CUSTOM - Blocking time multiplies exponentially with each colliding vehicle: 2 vehicles = x (base), 3 vehicles = x², 4 vehicles = x³, where x is the base blocking time (5-10s configurable). Timer resets to new value when additional collision occurs. **MAXIMUM 4 vehicles can collide at an intersection** - additional vehicles wait in queue before the intersection.
+- Q: What is the target frame rate for visual smoothness and animation quality? → A: B (30 FPS minimum requirement, 60 FPS desirable if achievable without significant extra effort)
+- Q: When multiple traffic lights are clicked/switched simultaneously, how should the system process them? → A: B (Clicks are queued and processed sequentially)
+- Q: How do vehicles behave outside of intersections when another vehicle is ahead? → A: CUSTOM - Vehicles NEVER collide outside of intersections. They form queues/traffic jams by following the vehicle ahead at a safe distance.
+

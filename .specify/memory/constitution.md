@@ -18,6 +18,7 @@ Test-Driven Development is mandatory:
 ### III. Performance-First
 The game must run smoothly:
 - Minimum 30 FPS with 10+ simultaneous vehicles
+- 60 FPS desirable if achievable without significant extra development effort
 - Dijkstra route calculation < 100ms for grid up to 20x20
 - Efficient collision detection (no O(n²) comparisons)
 - Optimized rendering pipeline
