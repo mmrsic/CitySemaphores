@@ -13,19 +13,27 @@
 
 ---
 
-## Recent Specification Changes (2026-02-01)
+## Recent Specification Changes (2026-02-02)
 
 The following clarifications have been incorporated into this task list:
 
 1. **Traffic Light System**: 4 fully independent traffic lights per intersection (North, South, East, West)
-2. **Blocking Time System**: ADDITIVE calculation (NOT exponential):
-   - 2 vehicles: 20 seconds
-   - 3 vehicles: 50 seconds (20+30)
-   - 4 vehicles: 100 seconds (20+30+50)
-   - Maximum 4 vehicles can collide at an intersection
-3. **Vehicle Following Behavior**: Vehicles NEVER collide outside intersections - they maintain safe distance (0.5 grid units) and form queues
-4. **Game Over Condition**: NEW - Game ends when all city border entry points are blocked by traffic jams for 5 seconds (gridlock condition)
-5. **Frame Rate**: 30 FPS minimum requirement, 60 FPS desirable (not mandatory)
+2. **Directional Occupancy**: Maximum 1 vehicle per direction on intersection, naturally limiting collisions to 4 vehicles max
+3. **Blocking Time System**: ADDITIVE calculation (NOT exponential) with base 7.5s:
+   - 1 vehicle: 7.5 seconds
+   - 2 vehicles: 22.5 seconds (7.5+15)
+   - 3 vehicles: 52.5 seconds (7.5+15+30)
+   - 4 vehicles: 112.5 seconds (7.5+15+30+60)
+   - Maximum 4 vehicles can collide at an intersection (one per direction)
+4. **Scoring System**: Base score (crossings) + Distance bonus - Wait time penalty
+   - Base: +1 per intersection passed
+   - Bonus: Route distance (number of road segments)
+   - Penalty: -1 per second of waiting time
+   - Formula: score = crossings + max(0, distance - waitSeconds)
+5. **Vehicle Removal**: Collided vehicles removed after intersection unblocks, player keeps earned points
+6. **Vehicle Following Behavior**: Vehicles NEVER collide outside intersections - they maintain safe distance and form directional queues
+7. **Game Over Condition**: Game ends when all city border entry points are blocked by traffic jams for 5 seconds (gridlock condition)
+8. **Frame Rate**: 30 FPS minimum requirement, 60 FPS desirable (not mandatory)
 
 **New Entities Added**:
 - **TrafficManager**: Manages vehicle queues and following behavior
@@ -169,7 +177,7 @@ The following clarifications have been incorporated into this task list:
 
 - [ ] T060 [P] [US3] Unit test for CollisionDetector.detectCollision() basic case in commonTest/kotlin/com/citysemaphores/domain/collision/CollisionDetectorTest.kt
 - [ ] T061 [P] [US3] Unit test for CollisionDetector with no collision in commonTest/kotlin/com/citysemaphores/domain/collision/CollisionDetectorTest.kt
-- [ ] T062 [P] [US3] Unit test for Intersection.blockWithCollision() with ADDITIVE blocking times (2 vehicles=20s, 3 vehicles=50s, 4 vehicles=100s) in commonTest/kotlin/com/citysemaphores/domain/model/IntersectionTest.kt
+- [ ] T062 [P] [US3] Unit test for Intersection.blockWithCollision() with ADDITIVE blocking times (1 vehicle=7.5s, 2 vehicles=22.5s, 3 vehicles=52.5s, 4 vehicles=112.5s) in commonTest/kotlin/com/citysemaphores/domain/model/IntersectionTest.kt
 - [ ] T063 [P] [US3] Unit test for 4-vehicle collision cap (additional vehicles wait in queue) in commonTest/kotlin/com/citysemaphores/domain/model/IntersectionTest.kt
 - [ ] T064 [US3] Integration test for collision → additive blocking → unblocking flow in commonTest/kotlin/com/citysemaphores/integration/CollisionFlowTest.kt
 - [ ] T065 [P] [US3] Unit test for TrafficManager.updateVehicleFollowing() safe distance maintenance in commonTest/kotlin/com/citysemaphores/game/TrafficManagerTest.kt
@@ -177,22 +185,24 @@ The following clarifications have been incorporated into this task list:
 
 ### Implementation for User Story 3
 
-- [ ] T067 [US3] Add blockWithCollision() method with ADDITIVE blocking calculation to Intersection data class in commonMain/kotlin/com/citysemaphores/domain/model/Intersection.kt
-- [ ] T068 [US3] Add canAcceptCollision() method (checks if collisionVehicleCount < 4) to Intersection in commonMain/kotlin/com/citysemaphores/domain/model/Intersection.kt
-- [ ] T069 [US3] Update Intersection to track collisionVehicleCount and implement updateBlockTimer() in commonMain/kotlin/com/citysemaphores/domain/model/Intersection.kt
-- [ ] T070 [US3] Update Vehicle to include Crashed state and vehicleAhead reference for following behavior in commonMain/kotlin/com/citysemaphores/domain/model/Vehicle.kt
-- [ ] T071 [US3] Add queuePosition property to Vehicle for queue management in commonMain/kotlin/com/citysemaphores/domain/model/Vehicle.kt
-- [ ] T072 [US3] Implement CollisionDetector.detectCollision() with spatial check in commonMain/kotlin/com/citysemaphores/domain/collision/CollisionDetector.kt
-- [ ] T073 [US3] Implement TrafficManager.updateVehicleFollowing() for safe distance maintenance in commonMain/kotlin/com/citysemaphores/game/TrafficManager.kt
-- [ ] T074 [US3] Implement TrafficManager.formQueue() for intersection queue management in commonMain/kotlin/com/citysemaphores/game/TrafficManager.kt
-- [ ] T075 [US3] Implement TrafficManager.calculateSafeDistance() and shouldSlowDown() helpers in commonMain/kotlin/com/citysemaphores/game/TrafficManager.kt
-- [ ] T076 [US3] Integrate TrafficManager into GameEngine for vehicle following updates in commonMain/kotlin/com/citysemaphores/game/GameEngine.kt
-- [ ] T077 [US3] Integrate CollisionDetector into GameEngine update loop in commonMain/kotlin/com/citysemaphores/game/GameEngine.kt
-- [ ] T078 [US3] Handle collision events with additive blocking (reset timer, increment counter, cap at 4) in GameEngine.kt
-- [ ] T079 [US3] Implement intersection blocking timer updates and unblocking logic in GameEngine.kt
-- [ ] T080 [P] [US3] Add blocked intersection visual indicators in IntersectionView.kt (warning symbols, color overlay, pulsing effects)
-- [ ] T081 [P] [US3] Update traffic light rendering to show all red during blocking in IntersectionView.kt
-- [ ] T082 [P] [US3] Add visual queue indicators for waiting vehicles in VehicleView.kt
+- [ ] T067 [US3] Add blockWithCollision(collidingVehicleIds: Set<String>) method with ADDITIVE blocking calculation to Intersection data class in commonMain/kotlin/com/citysemaphores/domain/model/Intersection.kt
+- [ ] T068 [US3] Add directional occupancy map (Map<Direction, String?>) to Intersection for tracking one vehicle per direction in commonMain/kotlin/com/citysemaphores/domain/model/Intersection.kt
+- [ ] T069 [US3] Add collidedVehicles: Set<String> to Intersection to track collided vehicle IDs and implement updateBlockTimer() in commonMain/kotlin/com/citysemaphores/domain/model/Intersection.kt
+- [ ] T070 [US3] Add canVehicleEnter(from: Direction, vehicleId: String), enterIntersection(), leaveIntersection() methods to Intersection in commonMain/kotlin/com/citysemaphores/domain/model/Intersection.kt
+- [ ] T071 [US3] Update Vehicle to include waitTime: Float and isInCollision: Boolean properties in commonMain/kotlin/com/citysemaphores/domain/model/Vehicle.kt
+- [ ] T072 [US3] Add waitAtIntersection(deltaTime: Float) and calculateScore() methods to Vehicle in commonMain/kotlin/com/citysemaphores/domain/model/Vehicle.kt
+- [ ] T073 [US3] Add totalDistance property to Route for bonus score calculation in commonMain/kotlin/com/citysemaphores/domain/model/Route.kt
+- [ ] T074 [US3] Implement CollisionDetector.detectCollisions() with spatial check for multiple vehicles in commonMain/kotlin/com/citysemaphores/domain/collision/CollisionDetector.kt
+- [ ] T075 [US3] Implement CollisionDetector.handleCollision() to update intersection and mark vehicles in commonMain/kotlin/com/citysemaphores/domain/collision/CollisionDetector.kt
+- [ ] T076 [US3] Implement TrafficManager.canVehicleEnterIntersection() checking occupancy in commonMain/kotlin/com/citysemaphores/game/TrafficManager.kt
+- [ ] T077 [US3] Implement TrafficManager.updateVehicleFollowing() for safe distance maintenance in commonMain/kotlin/com/citysemaphores/game/TrafficManager.kt
+- [ ] T078 [US3] Implement TrafficManager.formQueue() for directional intersection queue management in commonMain/kotlin/com/citysemaphores/game/TrafficManager.kt
+- [ ] T079 [US3] Integrate TrafficManager and CollisionDetector into GameEngine update loop in commonMain/kotlin/com/citysemaphores/game/GameEngine.kt
+- [ ] T080 [US3] Handle collision events with additive blocking and vehicle removal after unblocking in GameEngine.kt
+- [ ] T081 [US3] Implement intersection blocking timer updates and vehicle removal on unblock in GameEngine.kt
+- [ ] T082 [P] [US3] Add blocked intersection visual indicators in IntersectionView.kt (warning symbols, color overlay, pulsing effects)
+- [ ] T083 [P] [US3] Update traffic light rendering to show all red during blocking in IntersectionView.kt
+- [ ] T084 [P] [US3] Add visual queue indicators for waiting vehicles in VehicleView.kt
 - [ ] T083 [US3] Verify all US3 tests pass and collision detection with additive blocking works correctly
 
 **Checkpoint**: Collision detection and intersection blocking fully functional - MVP CORE COMPLETE
@@ -203,29 +213,33 @@ The following clarifications have been incorporated into this task list:
 
 **Goal**: Award points for successfully managed traffic to measure player performance
 
-**Independent Test**: Drive vehicle through multiple intersections, verify +1 per intersection, verify doubling at destination
+**Independent Test**: Drive vehicle through multiple intersections, verify +1 per intersection (base), verify distance bonus minus wait time at destination
 
 ### Tests for User Story 4
 
 > **TDD: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T073 [P] [US4] Unit test for ScoreCalculator.calculateCrossingScore() in commonTest/kotlin/com/citysemaphores/domain/scoring/ScoreCalculatorTest.kt
-- [ ] T074 [P] [US4] Unit test for ScoreCalculator.calculateDestinationBonus() in commonTest/kotlin/com/citysemaphores/domain/scoring/ScoreCalculatorTest.kt
-- [ ] T075 [P] [US4] Unit test for Vehicle.passCrossing() incrementing counter in commonTest/kotlin/com/citysemaphores/domain/model/VehicleTest.kt
-- [ ] T076 [US4] Integration test for scoring across multiple intersections in commonTest/kotlin/com/citysemaphores/integration/ScoringTest.kt
+- [ ] T085 [P] [US4] Unit test for Vehicle.calculateScore() with no waiting time in commonTest/kotlin/com/citysemaphores/domain/model/VehicleTest.kt
+- [ ] T086 [P] [US4] Unit test for Vehicle.calculateScore() with waiting time penalty in commonTest/kotlin/com/citysemaphores/domain/model/VehicleTest.kt
+- [ ] T087 [P] [US4] Unit test for Vehicle.calculateScore() with wait time exceeding distance in commonTest/kotlin/com/citysemaphores/domain/model/VehicleTest.kt
+- [ ] T088 [P] [US4] Unit test for Vehicle.passCrossing() incrementing counter in commonTest/kotlin/com/citysemaphores/domain/model/VehicleTest.kt
+- [ ] T089 [P] [US4] Unit test for Vehicle.waitAtIntersection() accumulating wait time in commonTest/kotlin/com/citysemaphores/domain/model/VehicleTest.kt
+- [ ] T090 [US4] Integration test for scoring with bonus and penalty across multiple vehicles in commonTest/kotlin/com/citysemaphores/integration/ScoringTest.kt
 
 ### Implementation for User Story 4
 
-- [ ] T077 [US4] Add crossingsPassed counter to Vehicle data class in commonMain/kotlin/com/citysemaphores/domain/model/Vehicle.kt
-- [ ] T078 [US4] Add passCrossing() method to Vehicle in commonMain/kotlin/com/citysemaphores/domain/model/Vehicle.kt
-- [ ] T079 [US4] Create ScoreCalculator with point calculation logic in commonMain/kotlin/com/citysemaphores/domain/scoring/ScoreCalculator.kt
-- [ ] T080 [US4] Add totalScore to GameState data class in commonMain/kotlin/com/citysemaphores/domain/model/GameState.kt
-- [ ] T081 [US4] Integrate ScoreCalculator into GameEngine for crossing events in commonMain/kotlin/com/citysemaphores/game/GameEngine.kt
-- [ ] T082 [US4] Implement destination arrival bonus scoring in GameEngine.kt
-- [ ] T083 [US4] Add score to GameUiState in commonMain/kotlin/com/citysemaphores/viewmodel/GameUiState.kt
-- [ ] T084 [P] [US4] Create ScoreDisplay composable in commonMain/kotlin/com/citysemaphores/ui/components/ScoreDisplay.kt
-- [ ] T085 [US4] Integrate ScoreDisplay into GameScreen in commonMain/kotlin/com/citysemaphores/ui/screens/GameScreen.kt
-- [ ] T086 [US4] Verify all US4 tests pass and scoring works correctly
+- [ ] T091 [US4] Vehicle already has crossingsPassed, waitTime, and calculateScore() from Phase 5 - verify implementation
+- [ ] T092 [US4] Route already has totalDistance property from Phase 5 - verify implementation
+- [ ] T093 [US4] Add vehiclesRemoved counter to GameState in commonMain/kotlin/com/citysemaphores/domain/model/GameState.kt
+- [ ] T094 [US4] Update GameState.removeVehicle() to calculate and add final score in commonMain/kotlin/com/citysemaphores/domain/model/GameState.kt
+- [ ] T095 [US4] Update GameState.vehicleReachedDestination() to calculate final score with bonus/penalty in commonMain/kotlin/com/citysemaphores/domain/model/GameState.kt
+- [ ] T096 [US4] Integrate wait time tracking into GameEngine vehicle update loop in commonMain/kotlin/com/citysemaphores/game/GameEngine.kt
+- [ ] T097 [US4] Implement destination arrival scoring with calculateScore() in GameEngine.kt
+- [ ] T098 [US4] Implement collision vehicle removal with score calculation in GameEngine.kt
+- [ ] T099 [US4] Add score to GameUiState in commonMain/kotlin/com/citysemaphores/viewmodel/GameUiState.kt
+- [ ] T100 [P] [US4] Create ScoreDisplay composable showing total score and stats in commonMain/kotlin/com/citysemaphores/ui/components/ScoreDisplay.kt
+- [ ] T101 [US4] Integrate ScoreDisplay into GameScreen in commonMain/kotlin/com/citysemaphores/ui/screens/GameScreen.kt
+- [ ] T102 [US4] Verify all US4 tests pass and scoring with bonus/penalty works correctly
 
 **Checkpoint**: Scoring system fully functional
 
@@ -688,7 +702,10 @@ After completion, verify these measurable outcomes from spec.md:
 - **TDD Critical**: Tests MUST be written first and verified to fail before implementation
 - **MVP = US1 + US2 + US3 + Game Loop + Web Platform**: Prioritize these for fastest time to playable game
 - **Enhanced MVP = MVP + US4 (Scoring) + US6 (Game Over)**: Adds full game experience with win/lose conditions
-- **Additive Blocking Times**: 2 vehicles = 20s, 3 vehicles = 50s (20+30), 4 vehicles = 100s (20+30+50) - NOT exponential
+- **Additive Blocking Times**: 1 vehicle = 7.5s, 2 vehicles = 22.5s (7.5+15), 3 vehicles = 52.5s (7.5+15+30), 4 vehicles = 112.5s (7.5+15+30+60) - NOT exponential
+- **Directional Occupancy**: Max 1 vehicle per direction on intersection, naturally limiting collisions to 4 vehicles
+- **Scoring System**: Base (crossings) + Bonus (distance) - Penalty (wait time seconds)
+- **Vehicle Removal**: Collided vehicles removed after unblock, player keeps earned points
 - **Vehicle Following**: Vehicles NEVER collide outside intersections - they maintain safe distance and form queues
 - **Frame Rate Targets**: 30 FPS minimum requirement, 60 FPS desirable (not mandatory)
 - **Commit strategy**: Commit after each task or logical group (e.g., all tests for a story, then all implementations)

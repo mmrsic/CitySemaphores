@@ -10,8 +10,10 @@ CitySemaphores is a visually impressive cross-platform 2D traffic simulation gam
 
 - **Grid-based city** with rectangular intersections and 4 independent traffic lights per intersection (N, S, E, W)
 - **Vehicle spawning** at city borders with optimal routing via Dijkstra's algorithm
-- **Collision detection** with additively increasing intersection blocking time (2 vehicles = 20s, 3 vehicles = 50s, 4 vehicles = 100s)
-- **Scoring system** awarding points for successfully managed traffic
+- **Directional occupancy** limiting one vehicle per direction on intersections, naturally capping collisions at 4 vehicles maximum
+- **Collision detection** with additively increasing intersection blocking time (1 vehicle = 7.5s, 2 vehicles = 22.5s, 3 vehicles = 52.5s, 4 vehicles = 112.5s)
+- **Scoring system** awarding base points for crossings plus distance bonus reduced by waiting time, encouraging efficient traffic management
+- **Vehicle removal** after collision unblocking, with player keeping earned points before collision
 - **Visual excellence** with smooth animations (30 FPS minimum, 60 FPS desirable), particle effects, glow effects, and modern UI
 
 **Technical Approach**: Kotlin Multiplatform with Compose Multiplatform for cross-platform support, targeting Browser (P1), Android (P2), Linux Desktop (P3), with optional macOS and iOS support. Shared game logic in commonMain with platform-specific rendering and input handling.

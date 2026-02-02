@@ -1,8 +1,8 @@
 # Data Model: CitySemaphores
 
-**Date**: 2026-02-01  
+**Date**: 2026-02-02  
 **Status**: Complete  
-**Version**: 1.0
+**Version**: 2.0
 
 ## Overview
 
@@ -28,6 +28,8 @@ This document defines the domain model for CitySemaphores, including all entitie
 │  - trafficLights: Map<Direction, TrafficLight>     │
 │  - status: IntersectionStatus                       │
 │  - blockTimer: Float?                               │
+│  - occupancy: Map<Direction, Vehicle?>              │
+│  - collidedVehicles: Set<String>                    │
 └─────────────────────────────────────────────────────┘
                       │
         ┌─────────────┴─────────────┐
@@ -46,7 +48,7 @@ This document defines the domain model for CitySemaphores, including all entitie
                           │  - id           │
                           │  - position     │
                           │  - route        │
-                          │  - score        │
+                          │  - waitTime     │
                           └─────────────────┘
                                    │
                                    │ follows
@@ -116,38 +118,69 @@ data class Intersection(
     val trafficLights: Map<Direction, TrafficLight>,
     val status: IntersectionStatus = IntersectionStatus.Normal,
     val blockTimer: Float? = null,
-    val collisionVehicleCount: Int = 0,
+    val occupancy: Map<Direction, String?> = mapOf(
+        Direction.North to null,
+        Direction.South to null,
+        Direction.East to null,
+        Direction.West to null
+    ),
+    val collidedVehicles: Set<String> = emptySet(),
     val baseBlockingTime: Float = 7.5f  // Configurable: 5-10 seconds
 ) {
+    companion object {
+        const val MAX_COLLISION_VEHICLES = 4
+    }
+
     fun isBorder(): Boolean =
         gridPosition.x == 0 || gridPosition.y == 0 ||
         gridPosition.x == maxX || gridPosition.y == maxY
     
-    fun canVehiclePass(from: Direction): Boolean =
+    fun canVehicleEnter(from: Direction, vehicleId: String): Boolean =
         status == IntersectionStatus.Normal &&
-        trafficLights[from]?.state == TrafficLightState.Green
-    
-    fun blockWithCollision(): Intersection {
-        val newCount = min(collisionVehicleCount + 1, MAX_COLLISION_VEHICLES)
-        val exponentialTime = baseBlockingTime.pow(newCount - 1)
+        trafficLights[from]?.state == TrafficLightState.Green &&
+        occupancy[from] == null
+
+    fun enterIntersection(from: Direction, vehicleId: String): Intersection =
+        copy(occupancy = occupancy + (from to vehicleId))
+
+    fun leaveIntersection(from: Direction): Intersection =
+        copy(occupancy = occupancy + (from to null))
+
+    fun isDirectionOccupied(direction: Direction): Boolean =
+        occupancy[direction] != null
+
+    fun blockWithCollision(collidingVehicleIds: Set<String>): Intersection {
+        val newCollidedVehicles = collidedVehicles + collidingVehicleIds
+        val collisionCount = newCollidedVehicles.size.coerceAtMost(MAX_COLLISION_VEHICLES)
+        
+        val additiveTime = when (collisionCount) {
+            1 -> baseBlockingTime
+            2 -> baseBlockingTime + 15f
+            3 -> baseBlockingTime + 15f + 30f
+            4 -> baseBlockingTime + 15f + 30f + 60f
+            else -> baseBlockingTime
+        }
+        
         return copy(
-            status = IntersectionStatus.Blocked, 
-            blockTimer = exponentialTime,
-            collisionVehicleCount = newCount
+            status = IntersectionStatus.Blocked,
+            blockTimer = additiveTime,
+            collidedVehicles = newCollidedVehicles,
+            occupancy = occupancy.mapValues { null } // Clear all occupancy
         )
     }
-    
+
     fun canAcceptCollision(): Boolean =
-        collisionVehicleCount < MAX_COLLISION_VEHICLES
-    
-    fun block(duration: Float): Intersection =
-        copy(status = IntersectionStatus.Blocked, blockTimer = duration)
+        collidedVehicles.size < MAX_COLLISION_VEHICLES
     
     fun updateBlockTimer(deltaTime: Float): Intersection =
         if (blockTimer != null && blockTimer > 0) {
             val newTimer = blockTimer - deltaTime
             if (newTimer <= 0) {
-                copy(status = IntersectionStatus.Normal, blockTimer = null)
+                copy(
+                    status = IntersectionStatus.Normal,
+                    blockTimer = null,
+                    collidedVehicles = emptySet()
+                )
             } else {
                 copy(blockTimer = newTimer)
             }
@@ -168,7 +201,9 @@ enum class IntersectionStatus {
 - `trafficLights`: Map of directions to traffic lights (4 independent: N, S, E, W)
 - `status`: Normal or Blocked
 - `blockTimer`: Remaining block time in seconds (null if not blocked)
-- `collisionVehicleCount`: Number of vehicles that have collided at this intersection during current blocking period
+- `occupancy`: Map tracking which vehicle (by ID) occupies each direction (null = free)
+- `collidedVehicles`: Set of vehicle IDs that have collided during current blocking period
+- `baseBlockingTime`: Base blocking duration (configurable 5-10s, default 7.5s)
 
 **Invariants**:
 - ID must be unique within the city
@@ -176,14 +211,17 @@ enum class IntersectionStatus {
 - Must have 4 independent traffic lights (North, South, East, West)
 - blockTimer is null when status is Normal
 - blockTimer > 0 when status is Blocked
-- collisionVehicleCount >= 0 and <= 4 (MAX_COLLISION_VEHICLES)
+- Each direction can have at most one vehicle ID in occupancy map
+- collidedVehicles.size <= 4 (MAX_COLLISION_VEHICLES)
 - Blocking time is calculated additively:
-  - 2 vehicles: 20 seconds
-  - 3 vehicles: 50 seconds (20 + 30)
-  - 4 vehicles: 100 seconds (20 + 30 + 50)
-- When collisionVehicleCount reaches 4, additional vehicles wait in queue before intersection
+  - 1 vehicle: 7.5 seconds (base)
+  - 2 vehicles: 22.5 seconds (7.5 + 15)
+  - 3 vehicles: 52.5 seconds (7.5 + 15 + 30)
+  - 4 vehicles: 112.5 seconds (7.5 + 15 + 30 + 60)
+- When collidedVehicles reaches 4, additional vehicles from same direction wait in queue
+- occupancy is cleared when intersection becomes blocked
 
-**Design Note**: The additive blocking time system provides escalating but predictable penalties. Each additional collision significantly increases blocking time, but remains manageable compared to exponential growth. The 4-vehicle cap creates a maximum penalty of 100 seconds while additional vehicles form queues, creating strategic gameplay pressure without excessive punishment.
+**Design Note**: The directional occupancy system ensures only one vehicle per direction can be on the intersection at any time. This implicitly limits collisions to a maximum of 4 vehicles (one from each direction). The additive blocking time provides escalating but predictable penalties without exponential growth.
 
 ---
 
@@ -246,15 +284,24 @@ data class Vehicle(
     val route: Route,
     val speed: Float = 1.0f,
     val crossingsPassed: Int = 0,
-    val state: VehicleState = VehicleState.Moving
+    val state: VehicleState = VehicleState.Moving,
+    val waitTime: Float = 0f,
+    val isInCollision: Boolean = false
 ) {
+    companion object {
+        const val SAFE_FOLLOWING_DISTANCE = 2.0f
+    }
+
     fun move(deltaTime: Float): Vehicle {
         // Calculate new position based on route and speed
         // ...
     }
     
-    fun waitAtIntersection(): Vehicle =
-        copy(state = VehicleState.Waiting)
+    fun waitAtIntersection(deltaTime: Float): Vehicle =
+        copy(
+            state = VehicleState.Waiting,
+            waitTime = waitTime + deltaTime
+        )
     
     fun continueMoving(): Vehicle =
         copy(state = VehicleState.Moving)
@@ -262,8 +309,20 @@ data class Vehicle(
     fun passCrossing(): Vehicle =
         copy(crossingsPassed = crossingsPassed + 1)
     
-    fun calculateScore(): Int =
-        crossingsPassed * 2 // Doubled at destination
+    fun markAsCollided(): Vehicle =
+        copy(
+            state = VehicleState.Crashed,
+            isInCollision = true
+        )
+
+    fun calculateScore(): Int {
+        val baseScore = crossingsPassed
+        val distanceBonus = route.totalDistance
+        val waitPenalty = waitTime.toInt()
+        val finalBonus = (distanceBonus - waitPenalty).coerceAtLeast(0)
+        
+        return baseScore + finalBonus
+    }
 }
 
 enum class VehicleState {
@@ -281,19 +340,26 @@ enum class VehicleState {
 - `speed`: Movement speed (grid units per second)
 - `crossingsPassed`: Count of successfully passed intersections
 - `state`: Current state (Moving/Waiting/Arrived/Crashed)
+- `waitTime`: Accumulated waiting time in seconds
+- `isInCollision`: Flag indicating if vehicle is involved in a collision
 
 **Invariants**:
 - ID must be unique
 - Position must be on or between valid intersections
 - Route must be non-empty
 - Speed must be positive
-- currentSpeed must be >= 0 and <= speed
 - crossingsPassed >= 0
-- If vehicleAhead is not null, then vehicle is in Following state
-- queuePosition >= 0
-- Vehicles never collide outside of intersections (enforced by following behavior)
+- waitTime >= 0
+- isInCollision is true only when state is Crashed
 
-**Design Note**: The following behavior ensures that vehicles automatically maintain safe distances on road segments, preventing collisions outside of intersections. This makes intersections the only location where player mistakes (incorrect traffic light management) can cause accidents.
+**Score Calculation**:
+- Base score: Number of crossings passed
+- Distance bonus: Total route distance (length of path)
+- Wait penalty: Each second of waiting reduces bonus by 1 point
+- Final bonus: max(0, distance bonus - wait penalty)
+- Total score: base score + final bonus
+
+**Design Note**: The wait time penalty encourages efficient traffic light management while still rewarding successful crossings. Vehicles in collisions are removed after the intersection unblocks, but the player keeps all points earned before the collision.
 
 ---
 
@@ -323,6 +389,9 @@ data class Route(
     val next: Intersection?
         get() = path.getOrNull(currentIndex + 1)
     
+    val totalDistance: Int
+        get() = path.size - 1  // Number of road segments
+    
     fun advance(): Route =
         if (currentIndex < path.size - 1)
             copy(currentIndex = currentIndex + 1)
@@ -337,11 +406,15 @@ data class Route(
 **Properties**:
 - `path`: Ordered list of intersections from start to destination
 - `currentIndex`: Current position in the path (0-based)
+- `totalDistance`: Length of route (number of road segments = intersections - 1)
 
 **Invariants**:
 - Path must have at least 2 intersections (start and destination)
 - Path must be connected (consecutive intersections are adjacent)
 - Current index must be within valid range [0, path.size-1]
+- totalDistance = path.size - 1
+
+**Design Note**: The total distance is used as the bonus scoring component, representing the length of the journey the vehicle completes.
 
 ---
 
@@ -438,14 +511,23 @@ data class GameState(
     val isPlaying: Boolean = false,
     val lastSpawnTime: Float = 0f,
     val isGameOver: Boolean = false,
-    val vehiclesRouted: Int = 0,  // Total vehicles that reached destination
+    val vehiclesRouted: Int = 0,
+    val vehiclesRemoved: Int = 0,
     val gridlockStatus: GridlockStatus = GridlockStatus.Clear
 ) {
     fun addVehicle(vehicle: Vehicle): GameState =
         copy(vehicles = vehicles + vehicle)
     
-    fun removeVehicle(vehicleId: String): GameState =
-        copy(vehicles = vehicles.filter { it.id != vehicleId })
+    fun removeVehicle(vehicleId: String): GameState {
+        val vehicle = vehicles.find { it.id == vehicleId }
+        val scoreToAdd = vehicle?.calculateScore() ?: 0
+        
+        return copy(
+            vehicles = vehicles.filter { it.id != vehicleId },
+            totalScore = totalScore + scoreToAdd,
+            vehiclesRemoved = vehiclesRemoved + 1
+        )
+    }
     
     fun updateVehicle(vehicleId: String, update: (Vehicle) -> Vehicle): GameState =
         copy(vehicles = vehicles.map { if (it.id == vehicleId) update(it) else it })
@@ -456,8 +538,14 @@ data class GameState(
     fun updateTime(deltaTime: Float): GameState =
         copy(gameTime = gameTime + deltaTime)
     
-    fun vehicleReachedDestination(): GameState =
-        copy(vehiclesRouted = vehiclesRouted + 1)
+    fun vehicleReachedDestination(vehicle: Vehicle): GameState {
+        val finalScore = vehicle.calculateScore()
+        return copy(
+            vehicles = vehicles.filter { it.id != vehicle.id },
+            totalScore = totalScore + finalScore,
+            vehiclesRouted = vehiclesRouted + 1
+        )
+    }
     
     fun triggerGameOver(): GameState =
         copy(isGameOver = true, isPlaying = false)
@@ -476,27 +564,18 @@ data class GameState(
 - `lastSpawnTime`: Time of last vehicle spawn
 - `isGameOver`: Whether the game has ended
 - `vehiclesRouted`: Count of vehicles that successfully reached their destination
+- `vehiclesRemoved`: Count of vehicles removed due to collisions
 - `gridlockStatus`: Current gridlock detection status (Clear/Warning/GameOver)
-        copy(totalScore = totalScore + points)
-    
-    fun updateTime(deltaTime: Float): GameState =
-        copy(gameTime = gameTime + deltaTime)
-}
-```
-
-**Properties**:
-- `city`: The city layout (immutable during gameplay)
-- `vehicles`: All active vehicles
-- `totalScore`: Accumulated score
-- `gameTime`: Elapsed time in seconds
-- `isPlaying`: Game paused/running status
-- `lastSpawnTime`: Time of last vehicle spawn
 
 **Invariants**:
 - All vehicles have unique IDs
 - Total score >= 0
 - Game time >= 0
 - All vehicle positions are within city bounds
+- vehiclesRouted >= 0
+- vehiclesRemoved >= 0
+
+**Design Note**: Vehicles involved in collisions are removed after the intersection unblocks. The score calculation happens at removal time, ensuring all points earned before the collision are preserved.
 
 ---
 
@@ -576,11 +655,32 @@ sealed interface GameEvent {
     data class VehicleSpawned(val vehicle: Vehicle) : GameEvent
     data class VehicleArrived(val vehicle: Vehicle, val score: Int) : GameEvent
     data class CrossingPassed(val vehicle: Vehicle, val intersection: Intersection) : GameEvent
-    data class CollisionOccurred(val vehicle1: Vehicle, val vehicle2: Vehicle, val intersection: Intersection) : GameEvent
-    data class IntersectionBlocked(val intersection: Intersection, val duration: Float) : GameEvent
-    data class IntersectionUnblocked(val intersection: Intersection) : GameEvent
+    data class CollisionOccurred(
+        val vehicles: Set<Vehicle>,
+        val intersection: Intersection,
+        val blockingTime: Float
+    ) : GameEvent
+    data class IntersectionBlocked(
+        val intersection: Intersection,
+        val duration: Float,
+        val collidedVehicleIds: Set<String>
+    ) : GameEvent
+    data class IntersectionUnblocked(
+        val intersection: Intersection,
+        val removedVehicleIds: Set<String>
+    ) : GameEvent
+    data class VehicleRemoved(
+        val vehicle: Vehicle,
+        val reason: RemovalReason,
+        val finalScore: Int
+    ) : GameEvent
     data class TrafficLightSwitched(val intersection: Intersection, val direction: Direction) : GameEvent
     data class ScoreAwarded(val points: Int, val reason: String) : GameEvent
+}
+
+enum class RemovalReason {
+    Arrived,
+    Collision
 }
 ```
 
@@ -596,6 +696,7 @@ sealed interface GameEvent {
 - Grid size constraints
 - All positions have intersections
 - Graph connectivity
+- Intersection occupancy rules (max 1 vehicle per direction)
 
 ### Vehicle Aggregate
 
@@ -606,7 +707,8 @@ sealed interface GameEvent {
 **Invariants Enforced**:
 - Route validity
 - Position on route
-- Score calculation
+- Wait time tracking
+- Score calculation including bonus and penalties
 
 ## Persistence Model (Optional - Future)
 
@@ -618,7 +720,9 @@ data class SavedGameState(
     val cityHeight: Int,
     val vehicles: List<SavedVehicle>,
     val totalScore: Int,
-    val gameTime: Float
+    val gameTime: Float,
+    val vehiclesRouted: Int,
+    val vehiclesRemoved: Int
 )
 
 @Serializable
@@ -628,7 +732,9 @@ data class SavedVehicle(
     val positionY: Float,
     val routePath: List<GridPosition>,
     val currentRouteIndex: Int,
-    val crossingsPassed: Int
+    val crossingsPassed: Int,
+    val waitTime: Float,
+    val isInCollision: Boolean
 )
 ```
 
@@ -640,24 +746,35 @@ data class SavedVehicle(
 - ✅ Graph is connected
 - ✅ Border intersections exist on all sides
 
+### Intersection Validation
+- ✅ Each direction has at most one occupying vehicle
+- ✅ Blocked intersections have no occupancy
+- ✅ Collision count <= 4
+- ✅ Blocking time matches collision count formula
+
 ### Vehicle Validation
 - ✅ Unique ID
 - ✅ Position within city bounds
 - ✅ Route starts and ends at border intersections
 - ✅ Speed > 0
 - ✅ crossingsPassed >= 0
+- ✅ waitTime >= 0
+- ✅ Crashed vehicles have isInCollision = true
 
 ### Route Validation
 - ✅ Path has at least 2 intersections
 - ✅ Path is connected (consecutive intersections adjacent)
 - ✅ Start is a border intersection
 - ✅ Destination is a border intersection
+- ✅ totalDistance = path.size - 1
 
 ### GameState Validation
 - ✅ All vehicle IDs unique
 - ✅ Total score >= 0
 - ✅ Game time >= 0
 - ✅ All vehicles within city bounds
+- ✅ vehiclesRouted >= 0
+- ✅ vehiclesRemoved >= 0
 
 ---
 
@@ -671,6 +788,14 @@ Manages vehicle queues and following behavior to prevent collisions outside of i
 
 ```kotlin
 class TrafficManager {
+    fun canVehicleEnterIntersection(
+        vehicle: Vehicle,
+        intersection: Intersection,
+        fromDirection: Direction
+    ): Boolean {
+        return intersection.canVehicleEnter(fromDirection, vehicle.id)
+    }
+
     fun updateVehicleFollowing(
         vehicles: List<Vehicle>,
         city: City
@@ -681,10 +806,11 @@ class TrafficManager {
     
     fun formQueue(
         vehicles: List<Vehicle>,
-        intersection: Intersection
+        intersection: Intersection,
+        direction: Direction
     ): List<Vehicle> {
-        // Organizes vehicles waiting at an intersection into a queue
-        // Assigns queue positions
+        // Organizes vehicles from specific direction waiting at intersection
+        // Only allows first vehicle to enter when intersection slot is free
         // Returns updated vehicle list
     }
     
@@ -692,11 +818,10 @@ class TrafficManager {
         follower: Vehicle,
         leader: Vehicle
     ): Float {
-        // Returns current distance between vehicles
+        return follower.position.distanceTo(leader.position)
     }
     
     fun shouldSlowDown(distance: Float): Boolean {
-        // Determines if follower should reduce speed
         return distance < Vehicle.SAFE_FOLLOWING_DISTANCE * 2
     }
 }
@@ -706,10 +831,70 @@ class TrafficManager {
 - Track which vehicles are on the same road segment
 - Establish following relationships (vehicleAhead)
 - Calculate safe distances and adjust speeds
-- Form and manage queues at intersections
+- Form and manage queues at intersections per direction
+- Enforce one-vehicle-per-direction intersection occupancy rule
 - Ensure no collisions occur outside of intersections
 
-**Design Note**: This manager is crucial for the gameplay mechanic that "vehicles never collide outside of intersections." It creates strategic pressure through traffic jams rather than additional collision penalties.
+**Design Note**: The directional queuing ensures that vehicles from the same direction wait behind each other, preventing more than one vehicle per direction from entering an intersection simultaneously.
+
+---
+
+### CollisionDetector
+
+Detects and handles collision events at intersections.
+
+```kotlin
+class CollisionDetector {
+    fun detectCollisions(
+        intersection: Intersection,
+        vehicles: List<Vehicle>
+    ): CollisionResult {
+        val vehiclesOnIntersection = vehicles.filter { vehicle ->
+            vehicle.position.toGridPosition() == intersection.gridPosition &&
+            vehicle.state == VehicleState.Moving
+        }
+
+        if (vehiclesOnIntersection.size >= 2) {
+            return CollisionResult.Collision(vehiclesOnIntersection.toSet())
+        }
+
+        return CollisionResult.NoCollision
+    }
+
+    fun handleCollision(
+        intersection: Intersection,
+        collidingVehicles: Set<Vehicle>
+    ): IntersectionUpdate {
+        val vehicleIds = collidingVehicles.map { it.id }.toSet()
+        val updatedIntersection = intersection.blockWithCollision(vehicleIds)
+        
+        return IntersectionUpdate(
+            intersection = updatedIntersection,
+            vehiclesToMark = vehicleIds,
+            blockingTime = updatedIntersection.blockTimer ?: 0f
+        )
+    }
+}
+
+sealed interface CollisionResult {
+    object NoCollision : CollisionResult
+    data class Collision(val vehicles: Set<Vehicle>) : CollisionResult
+}
+
+data class IntersectionUpdate(
+    val intersection: Intersection,
+    val vehiclesToMark: Set<String>,
+    val blockingTime: Float
+)
+```
+
+**Responsibilities**:
+- Detect when multiple vehicles occupy the same intersection
+- Calculate blocking time based on collision count
+- Mark vehicles as crashed
+- Update intersection state
+
+**Design Note**: The occupancy system naturally limits collisions to 4 vehicles maximum (one per direction), simplifying collision detection logic.
 
 ---
 
@@ -760,12 +945,9 @@ class GameOverDetector {
         intersection: Intersection,
         vehicles: List<Vehicle>
     ): Boolean {
-        // Check if vehicles are queued at this border intersection
-        // preventing new spawns
-        return vehicles.any { vehicle ->
-            vehicle.position.toGridPosition() == intersection.gridPosition &&
-            vehicle.state == VehicleState.Waiting
-        }
+        // Check if all directions of this border intersection are occupied or blocked
+        return intersection.status == IntersectionStatus.Blocked ||
+               intersection.occupancy.values.all { it != null }
     }
 }
 
@@ -792,10 +974,10 @@ sealed interface GridlockStatus {
 ### Memory Footprint
 
 For 20×20 grid with 50 vehicles:
-- City: ~400 intersections × 200 bytes = 80 KB
-- Vehicles: 50 × 150 bytes = 7.5 KB
+- City: ~400 intersections × 250 bytes = 100 KB (including occupancy maps)
+- Vehicles: 50 × 180 bytes = 9 KB (including waitTime)
 - Routes: 50 × (avg 20 intersections) × 8 bytes = 8 KB
-- **Total**: ~100 KB (negligible)
+- **Total**: ~120 KB (negligible)
 
 ### Immutability
 
@@ -812,5 +994,5 @@ Potential concern: Frequent copying of GameState
 
 ---
 
-**Data Model Status**: ✅ Complete  
+**Data Model Status**: ✅ Complete (Updated v2.0)
 **Next**: Architecture design and component contracts
