@@ -56,7 +56,7 @@ The following clarifications have been incorporated into this task list:
 
 **Purpose**: Initialize Kotlin Multiplatform project with Compose Multiplatform and all platform targets
 
-- [ ] T001 Initialize Kotlin Multiplatform project with Compose Multiplatform plugin in build.gradle.kts
+- [x] T001 Initialize Kotlin Multiplatform project with Compose Multiplatform plugin in build.gradle.kts
 - [ ] T002 Configure Gradle settings for multiplatform targets (JS IR, Android, JVM Desktop) in settings.gradle.kts
 - [ ] T003 [P] Create project directory structure per plan.md (commonMain, commonTest, jsMain, androidMain, desktopMain)
 - [ ] T004 [P] Add kotlinx.coroutines dependency to commonMain in composeApp/build.gradle.kts

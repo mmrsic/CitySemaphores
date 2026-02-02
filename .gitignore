@@ -1,5 +1,11 @@
 /.github/
+/.gradle/
 /.idea/
 /.specify/scripts/
 /.specify/templates/
 /*.iml
+/.kotlin/
+/local.properties
+/build/
+/composeApp/build/
+/kotlin-js-store/
