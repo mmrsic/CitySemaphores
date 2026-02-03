@@ -33,9 +33,22 @@ kotlin {
 
     js(IR) {
         moduleName = "composeApp"
+        useEsModules()
         browser {
             commonWebpackConfig {
                 outputFileName = "composeApp.js"
+            }
+            // Disable browser tests - use Node.js instead
+            testTask {
+                enabled = false
+            }
+        }
+        // Enable Node.js target for running tests (no browser required)
+        nodejs {
+            testTask {
+                useMocha {
+                    timeout = "10s"
+                }
             }
         }
         binaries.executable()
@@ -110,6 +123,19 @@ android {
 
 dependencies {
     debugImplementation(compose.uiTooling)
+}
+
+// Configure test tasks to skip browser tests and use Node.js only
+tasks.named("jsTest") {
+    dependsOn("jsNodeTest")
+    // Skip the default browser test task
+    doFirst {
+        println("Running JS tests with Node.js (browser tests disabled)")
+    }
+}
+
+tasks.named("jsBrowserTest") {
+    enabled = false
 }
 
 compose.desktop {

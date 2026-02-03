@@ -80,16 +80,16 @@ The following clarifications have been incorporated into this task list:
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T016 [P] Create base domain package structure: model/, graph/, collision/, scoring/ in commonMain
-- [ ] T017 [P] Define Direction enum (North, South, East, West) with opposite() in commonMain/kotlin/com/citysemaphores/domain/model/Direction.kt
-- [ ] T018 [P] Create GridPosition value object with neighbors() in commonMain/kotlin/com/citysemaphores/domain/model/GridPosition.kt
-- [ ] T019 [P] Create Position value object with lerp() and distanceTo() in commonMain/kotlin/com/citysemaphores/domain/model/Position.kt
-- [ ] T020 [P] Create Vector2D value object with operators in commonMain/kotlin/com/citysemaphores/domain/model/Vector2D.kt
-- [ ] T021 [P] Define GameEvent sealed interface with all event types in commonMain/kotlin/com/citysemaphores/domain/model/GameEvent.kt
-- [ ] T022 Create MVI base structure: GameUiState data class in commonMain/kotlin/com/citysemaphores/viewmodel/GameUiState.kt
-- [ ] T023 Create GameIntent sealed interface in commonMain/kotlin/com/citysemaphores/viewmodel/GameIntent.kt
-- [ ] T024 Create GameViewModel skeleton with StateFlow<GameUiState> in commonMain/kotlin/com/citysemaphores/viewmodel/GameViewModel.kt
-- [ ] T025 [P] Setup Compose theme (Color.kt, Theme.kt, Typography.kt) in commonMain/kotlin/com/citysemaphores/ui/theme/
+- [x] T016 [P] Create base domain package structure: model/, graph/, collision/, scoring/ in commonMain
+- [x] T017 [P] Define Direction enum (North, South, East, West) with opposite() in commonMain/kotlin/com/citysemaphores/domain/model/Direction.kt
+- [x] T018 [P] Create GridPosition value object with neighbors() in commonMain/kotlin/com/citysemaphores/domain/model/GridPosition.kt
+- [x] T019 [P] Create Position value object with lerp() and distanceTo() in commonMain/kotlin/com/citysemaphores/domain/model/Position.kt
+- [x] T020 [P] Create Vector2D value object with operators in commonMain/kotlin/com/citysemaphores/domain/model/Vector2D.kt
+- [x] T021 [P] Define GameEvent sealed interface with all event types in commonMain/kotlin/com/citysemaphores/domain/model/GameEvent.kt
+- [x] T022 Create MVI base structure: GameUiState data class in commonMain/kotlin/com/citysemaphores/viewmodel/GameUiState.kt
+- [x] T023 Create GameIntent sealed interface in commonMain/kotlin/com/citysemaphores/viewmodel/GameIntent.kt
+- [x] T024 Create GameViewModel skeleton with StateFlow<GameUiState> in commonMain/kotlin/com/citysemaphores/viewmodel/GameViewModel.kt
+- [x] T025 [P] Setup Compose theme (Color.kt, Theme.kt, Typography.kt) in commonMain/kotlin/com/citysemaphores/ui/theme/
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -105,21 +105,21 @@ The following clarifications have been incorporated into this task list:
 
 > **TDD: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T026 [P] [US1] Unit test for TrafficLightState enum in commonTest/kotlin/com/citysemaphores/domain/model/TrafficLightTest.kt
-- [ ] T027 [P] [US1] Unit test for TrafficLight toggle() logic in commonTest/kotlin/com/citysemaphores/domain/model/TrafficLightTest.kt
-- [ ] T028 [P] [US1] Unit test for Intersection canVehiclePass() in commonTest/kotlin/com/citysemaphores/domain/model/IntersectionTest.kt
-- [ ] T029 [US1] Integration test for traffic light switching via GameViewModel in commonTest/kotlin/com/citysemaphores/integration/TrafficLightSwitchingTest.kt
+- [x] T026 [P] [US1] Unit test for TrafficLightState enum in commonTest/kotlin/com/citysemaphores/domain/model/TrafficLightTest.kt
+- [x] T027 [P] [US1] Unit test for TrafficLight toggle() logic in commonTest/kotlin/com/citysemaphores/domain/model/TrafficLightTest.kt
+- [x] T028 [P] [US1] Unit test for Intersection canVehiclePass() in commonTest/kotlin/com/citysemaphores/domain/model/IntersectionTest.kt
+- [x] T029 [US1] Integration test for traffic light switching via GameViewModel in commonTest/kotlin/com/citysemaphores/integration/TrafficLightSwitchingTest.kt
 
 ### Implementation for User Story 1
 
-- [ ] T030 [P] [US1] Create TrafficLightState enum (Red, Green) in commonMain/kotlin/com/citysemaphores/domain/model/TrafficLightState.kt
-- [ ] T031 [P] [US1] Create TrafficLight data class with toggle() in commonMain/kotlin/com/citysemaphores/domain/model/TrafficLight.kt
-- [ ] T032 [US1] Create Intersection data class with trafficLights map and canVehiclePass() in commonMain/kotlin/com/citysemaphores/domain/model/Intersection.kt
-- [ ] T033 [US1] Implement SwitchTrafficLight intent handler in GameViewModel in commonMain/kotlin/com/citysemaphores/viewmodel/GameViewModel.kt
-- [ ] T034 [P] [US1] Create IntersectionView composable with traffic light rendering in commonMain/kotlin/com/citysemaphores/ui/components/IntersectionView.kt
-- [ ] T035 [US1] Add click/touch handling to traffic lights in IntersectionView.kt
-- [ ] T036 [P] [US1] Add visual highlight for interactive traffic lights (hover/touch feedback) in IntersectionView.kt
-- [ ] T037 [US1] Verify all US1 tests pass and traffic lights switch correctly
+- [x] T030 [P] [US1] Create TrafficLightState enum (Red, Green) in commonMain/kotlin/com/citysemaphores/domain/model/TrafficLightState.kt
+- [x] T031 [P] [US1] Create TrafficLight data class with toggle() in commonMain/kotlin/com/citysemaphores/domain/model/TrafficLight.kt
+- [x] T032 [US1] Create Intersection data class with trafficLights map and canVehiclePass() in commonMain/kotlin/com/citysemaphores/domain/model/Intersection.kt
+- [x] T033 [US1] Implement SwitchTrafficLight intent handler in GameViewModel in commonMain/kotlin/com/citysemaphores/viewmodel/GameViewModel.kt
+- [x] T034 [P] [US1] Create IntersectionView composable with traffic light rendering in commonMain/kotlin/com/citysemaphores/ui/components/IntersectionView.kt
+- [x] T035 [US1] Add click/touch handling to traffic lights in IntersectionView.kt
+- [x] T036 [P] [US1] Add visual highlight for interactive traffic lights (hover/touch feedback) in IntersectionView.kt
+- [x] T037 [US1] Verify all US1 tests pass and traffic lights switch correctly
 
 **Checkpoint**: Traffic light control is fully functional and independently testable
 

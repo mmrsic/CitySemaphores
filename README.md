@@ -1,4 +1,33 @@
 # CitySemaphores - Traffic Light Simulation Game
+
+> 🚦 **Current Status: Phase 3 Prototype - Traffic Light Control** 🚦  
+> A working prototype demonstrating manual traffic light control at intersections.
+> 
+> **What's implemented:**
+> - ✅ 5x5 City Grid with Intersections
+> - ✅ 4 Independent Traffic Lights per Intersection (N, S, E, W)
+> - ✅ Manual Traffic Light Control (Click to Toggle)
+> - ✅ Visual Feedback (Hover Effects, Color Changes)
+> - ✅ Intersection Blocking System (Ready for collision detection)
+> - ✅ Game Controls (Start/Pause/Stop)
+> - ✅ Statistics Panel
+>
+> **Try the prototype now:**
+> ```bash
+> # Desktop (Fastest)
+> ./gradlew :composeApp:run
+> 
+> # Or use IntelliJ IDEA Run Configuration: "Desktop - Run"
+> ```
+> 
+> **How to use:**
+> 1. Click "Start" to initialize the game
+> 2. Click on any traffic light (colored circles) to toggle Red ↔ Green
+> 3. Observe hover effects and visual feedback
+> 4. All 4 directions are independently controllable
+
+---
+
 A visually impressive cross-platform 2D traffic simulation game where the player manually controls traffic lights.
 ## Game Concept
 - **City Layout**: Grid-based road network with rectangular intersections
