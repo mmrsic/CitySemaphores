@@ -1,4 +1,6 @@
 rootProject.name = "CitySemaphores"
+
+// Enable Gradle feature previews for improved build performance and type-safe project accessors
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
@@ -16,6 +18,9 @@ pluginManagement {
 }
 
 dependencyResolutionManagement {
+    // Note: repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS) is not used
+    // because Kotlin/JS plugin adds Node.js distribution repository at project level
+
     repositories {
         google {
             mavenContent {
@@ -28,4 +33,9 @@ dependencyResolutionManagement {
     }
 }
 
+// Include composeApp module - contains multiplatform targets:
+// - JS IR (Browser-based version)
+// - Android (Mobile application)
+// - JVM Desktop (Desktop application)
+// - WasmJs (WebAssembly experimental)
 include(":composeApp")

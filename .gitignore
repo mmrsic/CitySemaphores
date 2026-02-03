@@ -9,3 +9,35 @@
 /build/
 /composeApp/build/
 /kotlin-js-store/
+
+# Gradle
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+
+# Build outputs
+**/build/
+**/out/
+
+# IntelliJ IDEA
+.idea/
+!.idea/runConfigurations/
+*.iml
+*.ipr
+*.iws
+
+# Android
+*.apk
+*.ap_
+*.dex
+captures/
+
+# macOS
+.DS_Store
+
+# Node/JS
+node_modules/
+npm-debug.log
+yarn-error.log
+

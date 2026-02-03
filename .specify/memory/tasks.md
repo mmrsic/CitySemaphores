@@ -57,20 +57,20 @@ The following clarifications have been incorporated into this task list:
 **Purpose**: Initialize Kotlin Multiplatform project with Compose Multiplatform and all platform targets
 
 - [x] T001 Initialize Kotlin Multiplatform project with Compose Multiplatform plugin in build.gradle.kts
-- [ ] T002 Configure Gradle settings for multiplatform targets (JS IR, Android, JVM Desktop) in settings.gradle.kts
-- [ ] T003 [P] Create project directory structure per plan.md (commonMain, commonTest, jsMain, androidMain, desktopMain)
-- [ ] T004 [P] Add kotlinx.coroutines dependency to commonMain in composeApp/build.gradle.kts
-- [ ] T005 [P] Add kotlinx.serialization plugin and dependency in build.gradle.kts
-- [ ] T006 [P] Add Compose Multiplatform dependencies (runtime, foundation, material3) in composeApp/build.gradle.kts
-- [ ] T007 [P] Configure kotlin.test for commonTest in composeApp/build.gradle.kts
-- [ ] T008 Create basic package structure in commonMain: domain/, game/, ui/, viewmodel/, util/
-- [ ] T009 [P] Setup .gitignore for Kotlin/Gradle project
-- [ ] T010 [P] Configure Android manifest and MainActivity stub in androidMain/kotlin/com/citysemaphores/MainActivity.kt
-- [ ] T011 [P] Create Web entry point main() in jsMain/kotlin/com/citysemaphores/Main.kt
-- [ ] T012 [P] Create Desktop entry point main() in desktopMain/kotlin/com/citysemaphores/Main.kt
-- [ ] T013 Verify build and "Hello World" runs on Web target with ./gradlew jsBrowserRun
-- [ ] T014 Verify build works for Android target with ./gradlew :composeApp:assembleDebug
-- [ ] T015 Verify build works for Desktop target with ./gradlew :composeApp:run
+- [x] T002 Configure Gradle settings for multiplatform targets (JS IR, Android, JVM Desktop) in settings.gradle.kts
+- [x] T003 [P] Create project directory structure per plan.md (commonMain, commonTest, jsMain, androidMain, desktopMain)
+- [x] T004 [P] Add kotlinx.coroutines dependency to commonMain in composeApp/build.gradle.kts
+- [x] T005 [P] Add kotlinx.serialization plugin and dependency in build.gradle.kts
+- [x] T006 [P] Add Compose Multiplatform dependencies (runtime, foundation, material3) in composeApp/build.gradle.kts
+- [x] T007 [P] Configure kotlin.test for commonTest in composeApp/build.gradle.kts
+- [x] T008 Create basic package structure in commonMain: domain/, game/, ui/, viewmodel/, util/
+- [x] T009 [P] Setup .gitignore for Kotlin/Gradle project
+- [x] T010 [P] Configure Android manifest and MainActivity stub in androidMain/kotlin/com/citysemaphores/MainActivity.kt
+- [x] T011 [P] Create Web entry point main() in jsMain/kotlin/com/citysemaphores/Main.kt
+- [x] T012 [P] Create Desktop entry point main() in desktopMain/kotlin/com/citysemaphores/Main.kt
+- [x] T013 Verify build and "Hello World" runs on Web target with ./gradlew jsBrowserRun
+- [x] T014 Verify build works for Android target with ./gradlew :composeApp:assembleDebug
+- [x] T015 Verify build works for Desktop target with ./gradlew :composeApp:run
 
 ---
 

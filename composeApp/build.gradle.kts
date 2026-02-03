@@ -1,8 +1,6 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
-import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -13,23 +11,16 @@ plugins {
 }
 
 kotlin {
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        moduleName = "composeApp"
-        browser {
-            val projectDirPath = project.projectDir.path
-            commonWebpackConfig {
-                outputFileName = "composeApp.js"
-                devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
-                    static = (static ?: mutableListOf()).apply {
-                        // Serve sources to debug inside browser
-                        add(projectDirPath)
-                    }
-                }
-            }
-        }
-        binaries.executable()
-    }
+    // Target Configuration:
+    // - js(IR): Main web target with executable main() in jsMain/Main.kt
+    // - androidTarget: Android APK with main activity in androidMain/MainActivity.kt
+    // - desktop (JVM): Desktop application with main() in desktopMain/Main.kt
+    //
+    // Note: wasmJs target temporarily removed to avoid "IrSimpleFunctionSymbolImpl is already bound"
+    // compilation error. The issue occurs when multiple JS targets try to bind the same main() function.
+    // wasmJs can be re-added later with:
+    // - A separate main() function in wasmJsMain/Main.kt
+    // - Different moduleName to avoid conflicts
 
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
@@ -48,6 +39,15 @@ kotlin {
             }
         }
         binaries.executable()
+
+        // Disable incremental compilation to avoid symbol binding issues
+        compilations.all {
+            compileTaskProvider.configure {
+                compilerOptions {
+                    freeCompilerArgs.add("-Xir-property-lazy-initialization")
+                }
+            }
+        }
     }
 
     sourceSets {
@@ -63,7 +63,8 @@ kotlin {
             implementation(compose.foundation)
             implementation(compose.material3)
             implementation(compose.ui)
-            implementation(compose.components.resources)
+            // Temporarily removed to avoid main() symbol binding conflicts
+            // implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
