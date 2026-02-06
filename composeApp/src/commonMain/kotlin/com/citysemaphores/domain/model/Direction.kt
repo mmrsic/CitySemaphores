@@ -26,9 +26,9 @@ enum class Direction {
      * North: (0, -1), South: (0, 1), East: (1, 0), West: (-1, 0)
      */
     fun toVector(): Vector2D = when (this) {
-        NORTH -> Vector2D(0.0, -1.0)
-        SOUTH -> Vector2D(0.0, 1.0)
-        EAST -> Vector2D(1.0, 0.0)
-        WEST -> Vector2D(-1.0, 0.0)
+        NORTH -> Vector2D.UP
+        SOUTH -> Vector2D.DOWN
+        EAST -> Vector2D.RIGHT
+        WEST -> Vector2D.LEFT
     }
 }

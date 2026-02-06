@@ -1,5 +1,7 @@
 package com.citysemaphores.viewmodel
 
+import com.citysemaphores.domain.model.Direction
+import com.citysemaphores.domain.model.GridPosition
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -41,15 +43,15 @@ class GameViewModel {
         val intersections = mutableListOf<IntersectionUiState>()
         for (y in 0 until gridHeight) {
             for (x in 0 until gridWidth) {
-                val position = com.citysemaphores.domain.model.GridPosition(x, y)
+                val position = GridPosition(x, y)
                 intersections.add(
                     IntersectionUiState(
                         position = position,
                         trafficLights = mapOf(
-                            com.citysemaphores.domain.model.Direction.NORTH to false,
-                            com.citysemaphores.domain.model.Direction.SOUTH to false,
-                            com.citysemaphores.domain.model.Direction.EAST to false,
-                            com.citysemaphores.domain.model.Direction.WEST to false
+                            Direction.NORTH to false,
+                            Direction.SOUTH to false,
+                            Direction.EAST to false,
+                            Direction.WEST to false
                         ),
                         isBlocked = false,
                         blockingTimeRemaining = 0.0,
@@ -82,7 +84,7 @@ class GameViewModel {
         startGame(currentState.gridWidth, currentState.gridHeight)
     }
 
-    private fun toggleTrafficLight(intersection: com.citysemaphores.domain.model.GridPosition, direction: com.citysemaphores.domain.model.Direction) {
+    private fun toggleTrafficLight(intersection: GridPosition, direction: Direction) {
         val currentState = _uiState.value
         val intersections = currentState.intersections.map { intersectionState ->
             if (intersectionState.position == intersection) {
@@ -98,11 +100,11 @@ class GameViewModel {
         _uiState.value = currentState.copy(intersections = intersections)
     }
 
-    private fun setIntersectionLights(intersection: com.citysemaphores.domain.model.GridPosition, greenDirections: Set<com.citysemaphores.domain.model.Direction>) {
+    private fun setIntersectionLights(intersection: GridPosition, greenDirections: Set<Direction>) {
         val currentState = _uiState.value
         val intersections = currentState.intersections.map { intersectionState ->
             if (intersectionState.position == intersection) {
-                val newLights = com.citysemaphores.domain.model.Direction.entries.associateWith { it in greenDirections }
+                val newLights = Direction.entries.associateWith { it in greenDirections }
                 intersectionState.copy(trafficLights = newLights)
             } else {
                 intersectionState
@@ -111,7 +113,7 @@ class GameViewModel {
         _uiState.value = currentState.copy(intersections = intersections)
     }
 
-    private fun toggleAllLights(intersection: com.citysemaphores.domain.model.GridPosition) {
+    private fun toggleAllLights(intersection: GridPosition) {
         val currentState = _uiState.value
         val intersections = currentState.intersections.map { intersectionState ->
             if (intersectionState.position == intersection) {
@@ -124,7 +126,7 @@ class GameViewModel {
         _uiState.value = currentState.copy(intersections = intersections)
     }
 
-    private fun setTrafficLight(intersection: com.citysemaphores.domain.model.GridPosition, direction: com.citysemaphores.domain.model.Direction, isGreen: Boolean) {
+    private fun setTrafficLight(intersection: GridPosition, direction: Direction, isGreen: Boolean) {
         val currentState = _uiState.value
         val intersections = currentState.intersections.map { intersectionState ->
             if (intersectionState.position == intersection) {
