@@ -135,31 +135,31 @@ The following clarifications have been incorporated into this task list:
 
 > **TDD: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T038 [P] [US2] Unit test for CityGraph adjacency list creation in commonTest/kotlin/com/citysemaphores/domain/graph/CityGraphTest.kt
-- [ ] T039 [P] [US2] Unit test for DijkstraRouter.findShortestPath() with known grid in commonTest/kotlin/com/citysemaphores/domain/graph/DijkstraRouterTest.kt
-- [ ] T040 [P] [US2] Unit test for DijkstraRouter performance (<100ms for 20×20) in commonTest/kotlin/com/citysemaphores/domain/graph/DijkstraRouterTest.kt
-- [ ] T041 [P] [US2] Unit test for Route.advance() and isAtDestination() in commonTest/kotlin/com/citysemaphores/domain/model/RouteTest.kt
-- [ ] T042 [P] [US2] Unit test for Vehicle.move() position interpolation in commonTest/kotlin/com/citysemaphores/domain/model/VehicleTest.kt
-- [ ] T043 [P] [US2] Unit test for VehicleSpawner spawn logic in commonTest/kotlin/com/citysemaphores/game/VehicleSpawnerTest.kt
-- [ ] T044 [US2] Integration test for vehicle spawning and routing flow in commonTest/kotlin/com/citysemaphores/integration/VehicleSpawningTest.kt
+- [x] T038 [P] [US2] Unit test for CityGraph adjacency list creation in commonTest/kotlin/com/citysemaphores/domain/graph/CityGraphTest.kt
+- [x] T039 [P] [US2] Unit test for DijkstraRouter.findShortestPath() with known grid in commonTest/kotlin/com/citysemaphores/domain/graph/DijkstraRouterTest.kt
+- [x] T040 [P] [US2] Unit test for DijkstraRouter performance (<100ms for 20×20) in commonTest/kotlin/com/citysemaphores/domain/graph/DijkstraRouterTest.kt
+- [x] T041 [P] [US2] Unit test for Route.advance() and isAtDestination() in commonTest/kotlin/com/citysemaphores/domain/model/RouteTest.kt
+- [x] T042 [P] [US2] Unit test for Vehicle.move() position interpolation in commonTest/kotlin/com/citysemaphores/domain/model/VehicleTest.kt
+- [x] T043 [P] [US2] Unit test for VehicleSpawner spawn logic in commonTest/kotlin/com/citysemaphores/game/VehicleSpawnerTest.kt
+- [x] T044 [US2] Integration test for vehicle spawning and routing flow in commonTest/kotlin/com/citysemaphores/integration/VehicleSpawningTest.kt
 
 ### Implementation for User Story 2
 
-- [ ] T045 [P] [US2] Create Route data class with path navigation in commonMain/kotlin/com/citysemaphores/domain/model/Route.kt
-- [ ] T046 [P] [US2] Create VehicleState enum (Moving, Waiting, Arrived, Crashed) in commonMain/kotlin/com/citysemaphores/domain/model/VehicleState.kt
-- [ ] T047 [US2] Create Vehicle data class with position, route, movement logic in commonMain/kotlin/com/citysemaphores/domain/model/Vehicle.kt
-- [ ] T048 [P] [US2] Create Edge data class in commonMain/kotlin/com/citysemaphores/domain/graph/Edge.kt
-- [ ] T049 [US2] Create CityGraph data class with adjacency list in commonMain/kotlin/com/citysemaphores/domain/graph/CityGraph.kt
-- [ ] T050 [US2] Implement DijkstraRouter.findShortestPath() algorithm in commonMain/kotlin/com/citysemaphores/domain/graph/DijkstraRouter.kt
-- [ ] T051 [US2] Create City data class with intersection map and graph in commonMain/kotlin/com/citysemaphores/domain/model/City.kt
-- [ ] T052 [US2] Implement VehicleSpawner with spawn timing and route calculation in commonMain/kotlin/com/citysemaphores/game/VehicleSpawner.kt
-- [ ] T053 [US2] Create GameTimer for spawn interval tracking in commonMain/kotlin/com/citysemaphores/game/GameTimer.kt
-- [ ] T054 [P] [US2] Create VehicleView composable with basic rendering in commonMain/kotlin/com/citysemaphores/ui/components/VehicleView.kt
-- [ ] T055 [P] [US2] Create CityGridView composable for rendering city layout in commonMain/kotlin/com/citysemaphores/ui/components/CityGridView.kt
-- [ ] T056 [US2] Integrate VehicleSpawner into GameEngine in commonMain/kotlin/com/citysemaphores/game/GameEngine.kt
-- [ ] T057 [US2] Add vehicle movement update logic in GameEngine.kt
-- [ ] T058 [US2] Handle vehicle arrival at destination (remove from game) in GameEngine.kt
-- [ ] T059 [US2] Verify all US2 tests pass and vehicles spawn/route/move correctly
+- [x] T045 [P] [US2] Create Route data class with path navigation in commonMain/kotlin/com/citysemaphores/domain/model/Route.kt
+- [x] T046 [P] [US2] Create VehicleState enum (Moving, Waiting, Arrived, Crashed) in commonMain/kotlin/com/citysemaphores/domain/model/VehicleState.kt
+- [x] T047 [US2] Create Vehicle data class with position, route, movement logic in commonMain/kotlin/com/citysemaphores/domain/model/Vehicle.kt
+- [x] T048 [P] [US2] Create Edge data class in commonMain/kotlin/com/citysemaphores/domain/graph/Edge.kt
+- [x] T049 [US2] Create CityGraph data class with adjacency list in commonMain/kotlin/com/citysemaphores/domain/graph/CityGraph.kt
+- [x] T050 [US2] Implement DijkstraRouter.findShortestPath() algorithm in commonMain/kotlin/com/citysemaphores/domain/graph/DijkstraRouter.kt
+- [x] T051 [US2] Create City data class with intersection map and graph in commonMain/kotlin/com/citysemaphores/domain/model/City.kt
+- [x] T052 [US2] Implement VehicleSpawner with spawn timing and route calculation in commonMain/kotlin/com/citysemaphores/game/VehicleSpawner.kt
+- [x] T053 [US2] Create GameTimer for spawn interval tracking in commonMain/kotlin/com/citysemaphores/game/GameTimer.kt
+- [x] T054 [P] [US2] Create VehicleView composable with basic rendering in commonMain/kotlin/com/citysemaphores/ui/components/VehicleView.kt
+- [x] T055 [P] [US2] Create CityGridView composable for rendering city layout in commonMain/kotlin/com/citysemaphores/ui/components/CityGridView.kt
+- [x] T056 [US2] Integrate VehicleSpawner into GameEngine in commonMain/kotlin/com/citysemaphores/game/GameEngine.kt
+- [x] T057 [US2] Add vehicle movement update logic in GameEngine.kt
+- [x] T058 [US2] Handle vehicle arrival at destination (remove from game) in GameEngine.kt
+- [x] T059 [US2] Verify all US2 tests pass and vehicles spawn/route/move correctly
 
 **Checkpoint**: Vehicle spawning and routing system is fully functional
 

@@ -16,8 +16,8 @@ data class GameUiState(
     val score: Int = 0,
 
     // Grid configuration
-    val gridWidth: Int = 5,
-    val gridHeight: Int = 5,
+    val gridWidth: Int = 10,
+    val gridHeight: Int = 10,
 
     // Game entities
     val vehicles: List<VehicleUiState> = emptyList(),
@@ -37,7 +37,7 @@ data class GameUiState(
         /**
          * Creates initial state for a new game.
          */
-        fun initial(gridWidth: Int = 5, gridHeight: Int = 5): GameUiState {
+        fun initial(gridWidth: Int = 10, gridHeight: Int = 10): GameUiState {
             return GameUiState(
                 gridWidth = gridWidth,
                 gridHeight = gridHeight

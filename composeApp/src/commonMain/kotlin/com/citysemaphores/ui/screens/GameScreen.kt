@@ -39,7 +39,7 @@ fun GameScreen(
         GameHeader(
             isRunning = uiState.isGameRunning,
             score = uiState.score,
-            onStartClick = { viewModel.handleIntent(GameIntent.StartGame(5, 5)) },
+            onStartClick = { viewModel.handleIntent(GameIntent.StartGame(10, 10)) },
             onPauseClick = { viewModel.handleIntent(GameIntent.PauseGame) },
             onResumeClick = { viewModel.handleIntent(GameIntent.ResumeGame) },
             onStopClick = { viewModel.handleIntent(GameIntent.StopGame) }
@@ -148,38 +148,48 @@ private fun CityGridView(
             contentAlignment = Alignment.Center
         ) {
             if (uiState.isGameRunning || uiState.intersections.isNotEmpty()) {
-                // Draw the grid
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(0.dp)
-                ) {
-                    for (y in 0 until uiState.gridHeight) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(0.dp)
-                        ) {
-                            for (x in 0 until uiState.gridWidth) {
-                                val position = GridPosition(x, y)
-                                val intersection = uiState.intersections.find { it.position == position }
+                Box {
+                    // Draw the grid (bottom layer)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(0.dp)
+                    ) {
+                        for (y in 0 until uiState.gridHeight) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(0.dp)
+                            ) {
+                                for (x in 0 until uiState.gridWidth) {
+                                    val position = GridPosition(x, y)
+                                    val intersection = uiState.intersections.find { it.position == position }
 
-                                if (intersection != null) {
-                                    IntersectionView(
-                                        state = intersection,
-                                        cellSize = cellSize,
-                                        onTrafficLightClick = { direction ->
-                                            onTrafficLightClick(position, direction)
-                                        }
-                                    )
-                                } else {
-                                    // Road segment
-                                    Box(
-                                        modifier = Modifier
-                                            .size(cellSize.dp)
-                                            .background(RoadGray)
-                                    )
+                                    if (intersection != null) {
+                                        IntersectionView(
+                                            state = intersection,
+                                            cellSize = cellSize,
+                                            onTrafficLightClick = { direction ->
+                                                onTrafficLightClick(position, direction)
+                                            }
+                                        )
+                                    } else {
+                                        // Road segment
+                                        Box(
+                                            modifier = Modifier
+                                                .size(cellSize.dp)
+                                                .background(RoadGray)
+                                        )
+                                    }
                                 }
                             }
                         }
+                    }
+
+                    // Draw vehicles (top layer)
+                    uiState.vehicles.forEach { vehicle ->
+                        VehicleOverlay(
+                            vehicle = vehicle,
+                            cellSize = cellSize
+                        )
                     }
                 }
             } else {
@@ -200,13 +210,44 @@ private fun CityGridView(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "Prototype: Traffic Light Control",
+                        text = "Prototype: Vehicle Spawning & Routing (US2)",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun VehicleOverlay(
+    vehicle: com.citysemaphores.viewmodel.VehicleUiState,
+    cellSize: Float
+) {
+    val x = vehicle.position.x.toFloat() * cellSize
+    val y = vehicle.position.y.toFloat() * cellSize
+
+    Box(
+        modifier = Modifier
+            .offset(x = x.dp, y = y.dp)
+            .size((cellSize * 0.5f).dp)
+    ) {
+        com.citysemaphores.ui.components.VehicleView(
+            vehicle = com.citysemaphores.domain.model.Vehicle(
+                id = vehicle.id,
+                position = vehicle.position,
+                route = com.citysemaphores.domain.model.Route(vehicle.route.map {
+                    com.citysemaphores.domain.model.Intersection(it)
+                }, vehicle.currentSegmentIndex),
+                speed = 2f,
+                state = if (vehicle.isWaiting)
+                    com.citysemaphores.domain.model.VehicleState.Waiting
+                else
+                    com.citysemaphores.domain.model.VehicleState.Moving
+            ),
+            gridSize = cellSize
+        )
     }
 }
 

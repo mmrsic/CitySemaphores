@@ -85,6 +85,7 @@ The game must be visually impressive and engaging:
 - KDoc for all public APIs
 - Consistent formatting (Kotlin Official Style Guide)
 - Platform-specific code must be documented and justified
+- Comment language must be US-English for consistency
 
 ### Platform-Specific Guidelines
 - **Web (Kotlin/JS)**: Performance optimization for browsers, efficient Canvas rendering
@@ -111,6 +112,7 @@ The game must be visually impressive and engaging:
 5. **Implementation**: Write code until tests are green (commonMain → platform-specific)
 6. **Refactoring**: Optimize code, remove duplicates
 7. **Validation**: Performance tests on all target platforms, manual gameplay tests
+8. **Gradle**: Gradle cannot be used by Agent in shell
 
 ### Multiplatform Development
 - **Start with Common**: Implement logic first in commonMain
@@ -131,6 +133,7 @@ The game must be visually impressive and engaging:
 - Inline comments (KDoc) for complex algorithms (Dijkstra, collision)
 - Platform-specific documentation for expect/actual implementations
 - Architecture Decision Records (ADR) for important design decisions
+- Documentation language must be US-English also in all comments
 
 ## Governance
 

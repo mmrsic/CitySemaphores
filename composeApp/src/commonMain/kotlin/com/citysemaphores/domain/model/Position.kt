@@ -54,4 +54,8 @@ data class Position(val x: Double, val y: Double) {
         GridPosition(x.toInt(), y.toInt())
 
     override fun toString(): String = "Position(x=$x, y=$y)"
+
+    companion object {
+        val ZERO = Position(0.0, 0.0)
+    }
 }
