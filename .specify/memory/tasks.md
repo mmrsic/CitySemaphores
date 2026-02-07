@@ -175,35 +175,35 @@ The following clarifications have been incorporated into this task list:
 
 > **TDD: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T060 [P] [US3] Unit test for CollisionDetector.detectCollision() basic case in commonTest/kotlin/com/citysemaphores/domain/collision/CollisionDetectorTest.kt
-- [ ] T061 [P] [US3] Unit test for CollisionDetector with no collision in commonTest/kotlin/com/citysemaphores/domain/collision/CollisionDetectorTest.kt
-- [ ] T062 [P] [US3] Unit test for Intersection.blockWithCollision() with ADDITIVE blocking times (1 vehicle=7.5s, 2 vehicles=22.5s, 3 vehicles=52.5s, 4 vehicles=112.5s) in commonTest/kotlin/com/citysemaphores/domain/model/IntersectionTest.kt
-- [ ] T063 [P] [US3] Unit test for 4-vehicle collision cap (additional vehicles wait in queue) in commonTest/kotlin/com/citysemaphores/domain/model/IntersectionTest.kt
-- [ ] T064 [US3] Integration test for collision → additive blocking → unblocking flow in commonTest/kotlin/com/citysemaphores/integration/CollisionFlowTest.kt
-- [ ] T065 [P] [US3] Unit test for TrafficManager.updateVehicleFollowing() safe distance maintenance in commonTest/kotlin/com/citysemaphores/game/TrafficManagerTest.kt
-- [ ] T066 [P] [US3] Unit test for TrafficManager.formQueue() at blocked intersections in commonTest/kotlin/com/citysemaphores/game/TrafficManagerTest.kt
+- [X] T060 [P] [US3] Unit test for CollisionDetector.detectCollision() basic case in commonTest/kotlin/com/citysemaphores/domain/collision/CollisionDetectorTest.kt
+- [X] T061 [P] [US3] Unit test for CollisionDetector with no collision in commonTest/kotlin/com/citysemaphores/domain/collision/CollisionDetectorTest.kt
+- [X] T062 [P] [US3] Unit test for Intersection.blockWithCollision() with ADDITIVE blocking times (1 vehicle=7.5s, 2 vehicles=22.5s, 3 vehicles=52.5s, 4 vehicles=112.5s) in commonTest/kotlin/com/citysemaphores/domain/model/IntersectionTest.kt
+- [X] T063 [P] [US3] Unit test for 4-vehicle collision cap (additional vehicles wait in queue) in commonTest/kotlin/com/citysemaphores/domain/model/IntersectionTest.kt
+- [X] T064 [US3] Integration test for collision → additive blocking → unblocking flow in commonTest/kotlin/com/citysemaphores/integration/CollisionFlowTest.kt
+- [X] T065 [P] [US3] Unit test for TrafficManager.updateVehicleFollowing() safe distance maintenance in commonTest/kotlin/com/citysemaphores/game/TrafficManagerTest.kt
+- [X] T066 [P] [US3] Unit test for TrafficManager.formQueue() at blocked intersections in commonTest/kotlin/com/citysemaphores/game/TrafficManagerTest.kt
 
 ### Implementation for User Story 3
 
-- [ ] T067 [US3] Add blockWithCollision(collidingVehicleIds: Set<String>) method with ADDITIVE blocking calculation to Intersection data class in commonMain/kotlin/com/citysemaphores/domain/model/Intersection.kt
-- [ ] T068 [US3] Add directional occupancy map (Map<Direction, String?>) to Intersection for tracking one vehicle per direction in commonMain/kotlin/com/citysemaphores/domain/model/Intersection.kt
-- [ ] T069 [US3] Add collidedVehicles: Set<String> to Intersection to track collided vehicle IDs and implement updateBlockTimer() in commonMain/kotlin/com/citysemaphores/domain/model/Intersection.kt
-- [ ] T070 [US3] Add canVehicleEnter(from: Direction, vehicleId: String), enterIntersection(), leaveIntersection() methods to Intersection in commonMain/kotlin/com/citysemaphores/domain/model/Intersection.kt
-- [ ] T071 [US3] Update Vehicle to include waitTime: Float and isInCollision: Boolean properties in commonMain/kotlin/com/citysemaphores/domain/model/Vehicle.kt
-- [ ] T072 [US3] Add waitAtIntersection(deltaTime: Float) and calculateScore() methods to Vehicle in commonMain/kotlin/com/citysemaphores/domain/model/Vehicle.kt
-- [ ] T073 [US3] Add totalDistance property to Route for bonus score calculation in commonMain/kotlin/com/citysemaphores/domain/model/Route.kt
-- [ ] T074 [US3] Implement CollisionDetector.detectCollisions() with spatial check for multiple vehicles in commonMain/kotlin/com/citysemaphores/domain/collision/CollisionDetector.kt
-- [ ] T075 [US3] Implement CollisionDetector.handleCollision() to update intersection and mark vehicles in commonMain/kotlin/com/citysemaphores/domain/collision/CollisionDetector.kt
-- [ ] T076 [US3] Implement TrafficManager.canVehicleEnterIntersection() checking occupancy in commonMain/kotlin/com/citysemaphores/game/TrafficManager.kt
-- [ ] T077 [US3] Implement TrafficManager.updateVehicleFollowing() for safe distance maintenance in commonMain/kotlin/com/citysemaphores/game/TrafficManager.kt
-- [ ] T078 [US3] Implement TrafficManager.formQueue() for directional intersection queue management in commonMain/kotlin/com/citysemaphores/game/TrafficManager.kt
-- [ ] T079 [US3] Integrate TrafficManager and CollisionDetector into GameEngine update loop in commonMain/kotlin/com/citysemaphores/game/GameEngine.kt
-- [ ] T080 [US3] Handle collision events with additive blocking and vehicle removal after unblocking in GameEngine.kt
-- [ ] T081 [US3] Implement intersection blocking timer updates and vehicle removal on unblock in GameEngine.kt
-- [ ] T082 [P] [US3] Add blocked intersection visual indicators in IntersectionView.kt (warning symbols, color overlay, pulsing effects)
-- [ ] T083 [P] [US3] Update traffic light rendering to show all red during blocking in IntersectionView.kt
-- [ ] T084 [P] [US3] Add visual queue indicators for waiting vehicles in VehicleView.kt
-- [ ] T083 [US3] Verify all US3 tests pass and collision detection with additive blocking works correctly
+- [X] T067 [US3] Add blockWithCollision(collidingVehicleIds: Set<String>) method with ADDITIVE blocking calculation to Intersection data class in commonMain/kotlin/com/citysemaphores/domain/model/Intersection.kt
+- [X] T068 [US3] Add directional occupancy map (Map<Direction, String?>) to Intersection for tracking one vehicle per direction in commonMain/kotlin/com/citysemaphores/domain/model/Intersection.kt
+- [X] T069 [US3] Add collidedVehicles: Set<String> to Intersection to track collided vehicle IDs and implement updateBlockTimer() in commonMain/kotlin/com/citysemaphores/domain/model/Intersection.kt
+- [X] T070 [US3] Add canVehicleEnter(from: Direction, vehicleId: String), enterIntersection(), leaveIntersection() methods to Intersection in commonMain/kotlin/com/citysemaphores/domain/model/Intersection.kt
+- [X] T071 [US3] Update Vehicle to include waitTime: Float and isInCollision: Boolean properties in commonMain/kotlin/com/citysemaphores/domain/model/Vehicle.kt
+- [X] T072 [US3] Add waitAtIntersection(deltaTime: Float) and calculateScore() methods to Vehicle in commonMain/kotlin/com/citysemaphores/domain/model/Vehicle.kt
+- [X] T073 [US3] Add totalDistance property to Route for bonus score calculation in commonMain/kotlin/com/citysemaphores/domain/model/Route.kt
+- [X] T074 [US3] Implement CollisionDetector.detectCollisions() with spatial check for multiple vehicles in commonMain/kotlin/com/citysemaphores/domain/collision/CollisionDetector.kt
+- [X] T075 [US3] Implement CollisionDetector.handleCollision() to update intersection and mark vehicles in commonMain/kotlin/com/citysemaphores/domain/collision/CollisionDetector.kt
+- [X] T076 [US3] Implement TrafficManager.canVehicleEnterIntersection() checking occupancy in commonMain/kotlin/com/citysemaphores/game/TrafficManager.kt
+- [X] T077 [US3] Implement TrafficManager.updateVehicleFollowing() for safe distance maintenance in commonMain/kotlin/com/citysemaphores/game/TrafficManager.kt
+- [X] T078 [US3] Implement TrafficManager.formQueue() for directional intersection queue management in commonMain/kotlin/com/citysemaphores/game/TrafficManager.kt
+- [X] T079 [US3] Integrate TrafficManager and CollisionDetector into GameEngine update loop in commonMain/kotlin/com/citysemaphores/game/GameEngine.kt
+- [X] T080 [US3] Handle collision events with additive blocking and vehicle removal after unblocking in GameEngine.kt
+- [X] T081 [US3] Implement intersection blocking timer updates and vehicle removal on unblock in GameEngine.kt
+- [X] T082 [P] [US3] Add blocked intersection visual indicators in IntersectionView.kt (warning symbols, color overlay, pulsing effects)
+- [X] T083 [P] [US3] Update traffic light rendering to show all red during blocking in IntersectionView.kt
+- [X] T084 [P] [US3] Add visual queue indicators for waiting vehicles in VehicleView.kt
+- [X] T083 [US3] Verify all US3 tests pass and collision detection with additive blocking works correctly
 
 **Checkpoint**: Collision detection and intersection blocking fully functional - MVP CORE COMPLETE
 

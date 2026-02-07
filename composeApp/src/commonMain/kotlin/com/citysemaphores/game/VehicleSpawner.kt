@@ -4,16 +4,16 @@ import com.citysemaphores.domain.graph.DijkstraRouter
 import com.citysemaphores.domain.model.*
 
 /**
- * Verwaltet das Spawning von Fahrzeugen in der Stadt.
+ * Manages the spawning of vehicles in the city.
  *
- * Der Spawner wählt zufällige Start- und Zielpositionen am Stadtrand
- * und berechnet die optimale Route mittels Dijkstra-Algorithmus.
+ * The spawner selects random start and destination positions at the city border
+ * and calculates the optimal route using Dijkstra's algorithm.
  *
- * @property city Die Stadt, in der Fahrzeuge spawnen
- * @property router Der Router für die Routenberechnung
- * @property spawnInterval Zeitintervall zwischen Spawns in Sekunden
- * @property timeSinceLastSpawn Vergangene Zeit seit dem letzten Spawn
- * @property nextVehicleId Zähler für die nächste Fahrzeug-ID
+ * @property city The city in which vehicles spawn
+ * @property router The router for route calculation
+ * @property spawnInterval Time interval between spawns in seconds
+ * @property timeSinceLastSpawn Elapsed time since the last spawn
+ * @property nextVehicleId Counter for the next vehicle ID
  */
 data class VehicleSpawner(
     val city: City,
@@ -24,22 +24,22 @@ data class VehicleSpawner(
 ) {
 
     /**
-     * Aktualisiert den Spawn-Timer
+     * Updates the spawn timer
      *
-     * @param deltaTime Vergangene Zeit in Sekunden
-     * @return Aktualisierter Spawner
+     * @param deltaTime Elapsed time in seconds
+     * @return Updated spawner
      */
     fun update(deltaTime: Float): VehicleSpawner =
         copy(timeSinceLastSpawn = timeSinceLastSpawn + deltaTime)
 
     /**
-     * Versucht ein neues Fahrzeug zu spawnen, wenn das Intervall verstrichen ist.
-     * Beim ersten Aufruf (timeSinceLastSpawn == 0) wird sofort gespawnt.
+     * Attempts to spawn a new vehicle if the interval has elapsed.
+     * On first call (timeSinceLastSpawn == 0) spawns immediately.
      *
-     * @return Neues Fahrzeug oder null, wenn noch nicht genug Zeit vergangen ist
+     * @return New vehicle or null if not enough time has elapsed yet
      */
     fun trySpawn(): Vehicle? {
-        // Erlaube Spawn beim ersten Mal oder wenn Intervall erreicht
+        // Allow spawn on first time or when interval is reached
         if (timeSinceLastSpawn > 0f && timeSinceLastSpawn < spawnInterval) {
             return null
         }
@@ -48,27 +48,27 @@ data class VehicleSpawner(
     }
 
     /**
-     * Spawnt ein neues Fahrzeug mit zufälliger Route
+     * Spawns a new vehicle with random route
      *
-     * @return Neues Fahrzeug oder null, wenn keine Route gefunden wurde
+     * @return New vehicle or null if no route was found
      */
     private fun spawnVehicle(): Vehicle? {
         val borderIntersections = city.getBorderIntersections()
 
         if (borderIntersections.size < 2) {
-            return null // Nicht genug Rand-Kreuzungen
+            return null // Not enough border intersections
         }
 
-        // Wähle zufällige Start- und Zielposition
+        // Select random start and destination position
         val start = borderIntersections.random()
         val destination = borderIntersections
             .filter { it != start }
             .randomOrNull() ?: return null
 
-        // Berechne Route
+        // Calculate route
         val route = router.findShortestPath(start, destination) ?: return null
 
-        // Erstelle Fahrzeug an der Startposition
+        // Create vehicle at start position
         val startPos = Position(
             start.position.x.toDouble(),
             start.position.y.toDouble()
@@ -78,7 +78,7 @@ data class VehicleSpawner(
             id = "vehicle-$nextVehicleId",
             position = startPos,
             route = route,
-            speed = 2f, // Standard-Geschwindigkeit
+            speed = 2f, // Standard speed
             state = VehicleState.Moving
         )
 
@@ -86,7 +86,7 @@ data class VehicleSpawner(
     }
 
     /**
-     * Resettet den Spawn-Timer nach erfolgreichem Spawn
+     * Resets the spawn timer after successful spawn
      */
     fun resetTimer(): VehicleSpawner =
         copy(
@@ -95,9 +95,9 @@ data class VehicleSpawner(
         )
 
     /**
-     * Spawnt ein Fahrzeug und resettet den Timer
+     * Spawns a vehicle and resets the timer
      *
-     * @return Pair aus optionalem Fahrzeug und aktualisiertem Spawner
+     * @return Pair of optional vehicle and updated spawner
      */
     fun spawnAndReset(): Pair<Vehicle?, VehicleSpawner> {
         val vehicle = trySpawn()

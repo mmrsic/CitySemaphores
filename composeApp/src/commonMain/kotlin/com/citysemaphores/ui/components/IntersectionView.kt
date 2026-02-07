@@ -1,5 +1,6 @@
 package com.citysemaphores.ui.components
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.hoverable
@@ -14,10 +15,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.citysemaphores.domain.model.Direction
 import com.citysemaphores.ui.theme.BlockedIntersection
 import com.citysemaphores.ui.theme.IntersectionGray
@@ -39,14 +42,39 @@ fun IntersectionView(
     onTrafficLightClick: (Direction) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Pulsing animation for blocked intersections
+    val infiniteTransition = rememberInfiniteTransition()
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+    
     Box(
         modifier = modifier
             .size(cellSize.dp)
             .background(
-                if (state.isBlocked) BlockedIntersection else IntersectionGray
+                if (state.isBlocked) {
+                    BlockedIntersection.copy(alpha = pulseAlpha)
+                } else {
+                    IntersectionGray
+                }
             ),
         contentAlignment = Alignment.Center
     ) {
+        // Warning symbol for blocked intersection
+        if (state.isBlocked) {
+            Text(
+                text = "⚠",  // Warning symbol
+                fontSize = (cellSize * 0.4f).sp,
+                color = Color.Yellow.copy(alpha = pulseAlpha),
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
+        
         // Render traffic lights for each direction
         TrafficLightIndicator(
             direction = Direction.NORTH,
@@ -82,14 +110,15 @@ fun IntersectionView(
 
         // Show blocking timer if blocked
         if (state.isBlocked && state.blockingTimeRemaining > 0) {
-            val timeText = "${(state.blockingTimeRemaining * 10).toInt() / 10.0}"
+            val timeText = "${(state.blockingTimeRemaining * 10).toInt() / 10.0}s"
             Text(
                 text = timeText,
                 style = MaterialTheme.typography.labelSmall,
                 color = Color.White,
                 modifier = Modifier
-                    .background(Color.Black.copy(alpha = 0.7f))
-                    .padding(2.dp)
+                    .align(Alignment.TopEnd)
+                    .background(Color.Red.copy(alpha = 0.8f))
+                    .padding(horizontal = 4.dp, vertical = 2.dp)
             )
         }
     }
@@ -109,8 +138,9 @@ private fun TrafficLightIndicator(
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
 
+    // When blocked, show all red lights
     val lightColor = when {
-        isBlocked -> Color.DarkGray // All lights gray when blocked
+        isBlocked -> TrafficLightRed // All lights red when blocked (not gray)
         isGreen -> TrafficLightGreen
         else -> TrafficLightRed
     }

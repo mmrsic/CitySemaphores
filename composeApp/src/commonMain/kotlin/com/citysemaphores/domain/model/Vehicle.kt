@@ -3,21 +3,21 @@ package com.citysemaphores.domain.model
 import kotlin.math.max
 
 /**
- * Repräsentiert ein Fahrzeug in der Simulation.
+ * Represents a vehicle in the simulation.
  *
- * Ein Fahrzeug folgt einer vorberechneten Route und kann sich in verschiedenen Zuständen befinden.
- * Die Punktzahl setzt sich zusammen aus:
- * - Basisptunkte: +1 pro passierter Kreuzung
- * - Bonuspunkte: Länge der Route (totalDistance) minus Wartezeit
+ * A vehicle follows a precalculated route and can be in different states.
+ * The score is composed of:
+ * - Base points: +1 per crossed intersection
+ * - Bonus points: Length of the route (totalDistance) minus wait time
  *
- * @property id Eindeutige ID des Fahrzeugs
- * @property position Aktuelle Position (kontinuierlich, nicht diskret)
- * @property route Route, der das Fahrzeug folgt
- * @property speed Geschwindigkeit in Einheiten pro Sekunde
- * @property state Aktueller Zustand des Fahrzeugs
- * @property crossingsPassed Anzahl der bereits passierten Kreuzungen (Basispunkte)
- * @property waitTime Akkumulierte Wartezeit in Sekunden
- * @property isInCollision Ob das Fahrzeug in eine Kollision verwickelt wurde
+ * @property id Unique ID of the vehicle
+ * @property position Current position (continuous, not discrete)
+ * @property route Route that the vehicle follows
+ * @property speed Speed in units per second
+ * @property state Current state of the vehicle
+ * @property crossingsPassed Number of intersections already passed (base points)
+ * @property waitTime Accumulated wait time in seconds
+ * @property isInCollision Whether the vehicle was involved in a collision
  */
 data class Vehicle(
     val id: String,
@@ -37,14 +37,14 @@ data class Vehicle(
     }
 
     /**
-     * Bewegt das Fahrzeug basierend auf der vergangenen Zeit.
+     * Moves the vehicle based on elapsed time.
      *
-     * - **Moving**: Bewegt sich in Richtung der nächsten Kreuzung
-     * - **Waiting**: Position bleibt gleich, waitTime wird erhöht
-     * - **Arrived/Crashed**: Keine Bewegung
+     * - **Moving**: Moves towards the next intersection
+     * - **Waiting**: Position remains the same, waitTime is increased
+     * - **Arrived/Crashed**: No movement
      *
-     * @param deltaTime Vergangene Zeit in Sekunden
-     * @return Aktualisiertes Fahrzeug
+     * @param deltaTime Elapsed time in seconds
+     * @return Updated vehicle
      */
     fun move(deltaTime: Float): Vehicle {
         return when (state) {
@@ -59,36 +59,36 @@ data class Vehicle(
                 copy(position = newPosition)
             }
             VehicleState.Waiting -> {
-                // Position bleibt gleich, aber Wartezeit erhöht sich
+                // Position remains the same, but wait time increases
                 copy(waitTime = waitTime + deltaTime)
             }
             VehicleState.Arrived, VehicleState.Crashed -> {
-                // Keine Bewegung
+                // No movement
                 this
             }
         }
     }
 
     /**
-     * Erhöht den Zähler für passierte Kreuzungen um 1.
-     * Wird aufgerufen, wenn das Fahrzeug eine Kreuzung verlässt.
+     * Increases the counter for passed intersections by 1.
+     * Called when the vehicle leaves an intersection.
      */
     fun passCrossing(): Vehicle =
         copy(crossingsPassed = crossingsPassed + 1)
 
     /**
-     * Berechnet die Gesamtpunktzahl für dieses Fahrzeug.
+     * Calculates the total score for this vehicle.
      *
-     * Formel: score = crossingsPassed + max(0, totalDistance - waitTime)
+     * Formula: score = crossingsPassed + max(0, totalDistance - waitTime)
      *
-     * - crossingsPassed: Basispunkte (+1 pro Kreuzung)
-     * - totalDistance: Bonuspunkte für die Streckenlänge
-     * - waitTime: Abzug für Wartezeit (kann Bonus auf 0 reduzieren)
+     * - crossingsPassed: Base points (+1 per intersection)
+     * - totalDistance: Bonus points for route length
+     * - waitTime: Deduction for wait time (can reduce bonus to 0)
      *
-     * Der Spieler erhält mindestens die Basispunkte, auch wenn die Wartezeit
-     * die Distanz übersteigt.
+     * The player receives at least the base points, even if the wait time
+     * exceeds the distance.
      *
-     * @return Die Gesamtpunktzahl
+     * @return The total score
      */
     fun calculateScore(): Int {
         val baseScore = crossingsPassed
@@ -97,25 +97,38 @@ data class Vehicle(
     }
 
     /**
-     * Setzt das Fahrzeug in den Wartezustand
+     * Sets the vehicle to waiting state and increases the wait time.
+     * This method is called when a vehicle must wait at an intersection.
+     *
+     * @param deltaTime Elapsed time in seconds
+     * @return Updated vehicle with increased wait time
+     */
+    fun waitAtIntersection(deltaTime: Float): Vehicle =
+        copy(
+            state = VehicleState.Waiting,
+            waitTime = waitTime + deltaTime
+        )
+
+    /**
+     * Sets the vehicle to waiting state
      */
     fun startWaiting(): Vehicle =
         copy(state = VehicleState.Waiting)
 
     /**
-     * Setzt das Fahrzeug zurück in den Bewegungszustand
+     * Sets the vehicle back to moving state
      */
     fun continueMoving(): Vehicle =
         if (state == VehicleState.Waiting) copy(state = VehicleState.Moving) else this
 
     /**
-     * Markiert das Fahrzeug als angekommen
+     * Marks the vehicle as arrived
      */
     fun markAsArrived(): Vehicle =
         copy(state = VehicleState.Arrived)
 
     /**
-     * Markiert das Fahrzeug als verunglückt
+     * Marks the vehicle as crashed
      */
     fun markAsCrashed(): Vehicle =
         copy(
